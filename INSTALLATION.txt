@@ -1,13 +1,9 @@
-MISE A JOUR — DARTS MANAGER v6
-
-1. Télécharge et décompresse le ZIP.
-2. Ouvre https://github.com/djacs26/darts-manager/upload/main
-3. Envoie les 8 fichiers extraits à la racine du dépôt (pas le dossier parent).
-4. Vérifie que GitHub propose bien de remplacer les fichiers existants, puis valide avec Commit changes.
-5. Attends la publication GitHub Pages.
-6. Ferme complètement l’ancienne application installée. Ouvre https://djacs26.github.io/darts-manager/ dans Chrome, puis recharge la page.
-7. Si l’ancienne version apparaît encore, ouvre les paramètres du site dans Chrome, efface les données du site, puis rouvre l’adresse.
-
-Fichiers à la racine : index.html, sw.js, manifest.webmanifest, icon.svg, icon-192.png, icon-512.png, README.md, INSTALLATION.txt.
-
-IMPORTANT : exporte tes statistiques en JSON avant la mise à jour. Les données restent stockées localement sur chaque appareil et ne sont pas synchronisées.
+MISE A JOUR DARTS MANAGER 4.4.1
+1. Décompresser ce ZIP.
+2. Dans GitHub, ouvrir le dépôt djacs26/darts-manager puis Add file > Upload files.
+3. Envoyer les 8 fichiers de ce dossier à la racine du dépôt (pas le dossier parent).
+4. Vérifier que index.html, sw.js, manifest.webmanifest et les icônes sont à la racine.
+5. Cliquer Commit changes.
+6. Attendre la publication GitHub Pages, puis ouvrir https://djacs26.github.io/darts-manager/?v=441
+7. Sur Android, fermer l'ancienne application installée, ouvrir le lien dans Chrome et actualiser.
+IMPORTANT : exporter les données depuis l'onglet Statistiques avant la mise à jour. Les données locales ne sont pas synchronisées entre appareils.
