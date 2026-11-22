@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="application-version" content="4.2.0"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
+<meta name="application-version" content="4.3.0"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg">
 <title>DARTS MANAGER</title>
 <style>
@@ -34,7 +34,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 <div class="panel"><div class="grid2"><div><label>DISCIPLINE</label><select id="game" class="field"><option value="501">501 · DOUBLE OUT</option><option value="cricket">CRICKET</option></select></div><div><label>PREMIER JOUEUR</label><select id="starter" class="field"></select></div></div><button class="primary" id="newGame" style="width:100%;margin-top:12px">NOUVELLE PARTIE</button><div id="matchNotice" class="notice">Ajoute au moins un joueur, puis lance une partie.</div></div>
 <div id="gameArea" class="hidden">
 <div class="panel scorebox"><div class="muted">AU TOUR DE</div><div id="activeName" class="big green">—</div><div id="remainingLabel" class="muted">SCORE RESTANT</div><div id="remaining" class="big">501</div><div id="turnMessage" class="notice">À toi de jouer !</div></div>
-<div class="panel" id="entry501"><label>TES TROIS FLÉCHETTES</label><div class="dartrow" id="dartSlots"></div><div class="multis"><button data-mult="1" class="selected">SIMPLE</button><button data-mult="2">DOUBLE</button><button data-mult="3">TRIPLE</button></div><div class="keypad" id="keypad"></div><div class="actionrow"><button id="undoDart">EFFACER DERNIÈRE</button><button class="primary" id="validateTurn">VALIDER LA VOLÉE</button></div><p class="tiny">Sélectionne simple, double ou triple, puis la valeur de la cible. Bull : 25, double bull : 50.</p></div>
+<div class="panel" id="entry501"><label>TES TROIS FLÉCHETTES</label><div class="dartrow" id="dartSlots"></div><div class="multis"><button data-mult="1" class="selected">SIMPLE</button><button data-mult="2">DOUBLE</button><button data-mult="3">TRIPLE</button></div><div class="keypad" id="keypad"></div><p class="tiny">La touche 0 permet d’enregistrer une fléchette manquée.</p><div class="actionrow"><button id="undoDart">EFFACER DERNIÈRE</button><button class="primary" id="validateTurn">VALIDER LA VOLÉE</button></div><p class="tiny">Sélectionne simple, double ou triple, puis la valeur de la cible. Bull : 25, double bull : 50.</p></div>
 <div class="panel hidden" id="cricketArea"><label>TABLEAU CRICKET</label><div id="cricketBoard"></div><div class="row" style="margin-top:12px"><select id="cricketTarget" class="field"><option value="20">20</option><option value="19">19</option><option value="18">18</option><option value="17">17</option><option value="16">16</option><option value="15">15</option><option value="Bull">Bull</option></select><select id="cricketMarks" class="field"><option value="1">Simple</option><option value="2">Double</option><option value="3">Triple</option></select></div><button class="primary" id="addCricket" style="width:100%;margin-top:9px">ENREGISTRER LA FLÉCHETTE</button></div>
 <div class="panel"><label>JOUEURS</label><div id="scoreboard"></div></div>
 <div class="panel"><label>COMMANDES RAPIDES</label><div class="actionrow"><button id="undoTurn">ANNULER LE TOUR</button><button id="nextPlayer">JOUEUR SUIVANT</button></div></div>
@@ -113,27 +113,48 @@ function pushDart(value,label){
  else if(label.startsWith('D')||label==='DBull'){effect('double','DOUBLE !',label);say('Bien joué ! Double réussi !',true)}
  }
 document.querySelectorAll('[data-mult]').forEach(b=>b.onclick=()=>{mult=Number(b.dataset.mult);document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x===b))});
-const keypad=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'25','BULL','EFFACER'];$('keypad').innerHTML=keypad.map(n=>`<button class="${['25','BULL','EFFACER'].includes(String(n))?'special':''}" data-key="${n}">${n}</button>`).join('');
-$('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){pushDart(50,'DBull');return}let n=Number(k),v=n===25?25*mult:n*mult;pushDart(v,(mult===1?'S':mult===2?'D':'T')+n)};
+const keypad=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'25','BULL','0','EFFACER'];$('keypad').innerHTML=keypad.map(n=>`<button class="${['25','BULL','EFFACER'].includes(String(n))?'special':''}" data-key="${n}">${n}</button>`).join('');
+$('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){if(mult===3){toast('Le bull ne peut pas être triple.');return}pushDart(mult===2?50:25,mult===2?'DBull':'Bull25');return}if(k==='0'){pushDart(0,'0');return}let n=Number(k),v=n===25?25*mult:n*mult;pushDart(v,(mult===1?'S':mult===2?'D':'T')+n)};
 $('undoDart').onclick=()=>{darts.pop();renderMatch()};
 function next(){let m=db.current;m.turn=(m.turn+1)%m.players.length;darts=[];renderMatch()}
 function validate501(){
- let m=db.current;if(!m||m.game!=='501')return;if(!darts.length)return toast('Saisis au moins une fléchette.');
- turnSnapshots.push(JSON.stringify(m));let p=active(),sum=darts.reduce((a,d)=>a+d.score,0),after=p.score-sum,last=darts[darts.length-1];p.visits++;
- let bust=after<0||after===1||(after===0&&!(/^(D|DBull)/.test(last.label)));
- if(bust){$('turnMessage').textContent='BUST ! Score inchangé.';say('Bust ! Le score ne change pas.',true);effect('bust','BUST !','Le score ne change pas');}
- else{
+ let m=db.current;if(!m||m.game!=='501')return;
+ if(!darts.length)return toast('Saisis au moins une fléchette.');
+ turnSnapshots.push(JSON.stringify(m));
+ let p=active(),visit=[...darts],sum=visit.reduce((a,d)=>a+d.score,0),after=p.score-sum,last=visit[visit.length-1];
+ p.visits++;
+ const bust=after<0||after===1||(after===0&&!(/^(D|DBull)/.test(last.label)));
+ if(bust){
+  $('turnMessage').textContent='BUST ! Score inchangé.';
+  say('Bust ! Le score ne change pas.',true);
+  effect('bust','BUST !','Le score ne change pas');
+ }else{
   p.total+=sum;p.best=Math.max(p.best,sum);p.score=after;
   $('turnMessage').textContent=`${sum} points ! Il te reste ${after}.`;
-  if(darts.length===3 && sum<=25){p.case25=(p.case25||0)+1;effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');say('T’as une case pour ça !',true);}
-  else if(sum===26){say('26, la Drôme !',true);effect('26','26, LA DRÔME !','');}
-  else if(sum===180){say('Cent quatre-vingts ! Il te reste '+after+'. Magnifique !',true);effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();}
-  else {say(`${sum} points, il te reste ${after}.`,sum>=60);if(sum>=100){toast('Très belle volée !');say('Magnifique volée ! Continue comme ça !',true)}else if(sum>=60){say('Bien joué ! Belle volée.',true)}}
-  if(sum<60){p.lowRun=(p.lowRun||0)+1;if(p.lowRun>=3){p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;say('Ah, on va passer à la règle des 6 flèches !',true);effect('six','RÈGLE DES 6 FLÈCHES !','On reprend les bases');}}
-  else p.lowRun=0;
+  // Phrases demandées : déclenchées uniquement après une volée complète de 3 fléchettes.
+  if(visit.length===3 && sum<=25){
+   p.case25=(p.case25||0)+1;
+   effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');
+   say('T’as une case pour ça !',true);
+  }else if(visit.length===3 && sum===26){
+   effect('26','26, LA DRÔME !','');
+   say('26, la Drôme !',true);
+  }else if(visit.length===3 && sum===180){
+   say('Cent quatre-vingts ! Il te reste '+after+'. Magnifique !',true);
+   effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();
+  }else{
+   say(`${sum} points, il te reste ${after}.`,sum>=60);
+   if(sum>=100){toast('Très belle volée !');say('Magnifique volée ! Continue comme ça !',true)}
+   else if(sum>=60){say('Bien joué ! Belle volée.',true)}
+  }
+  // Conseil après trois volées consécutives sous 60 points (règle des 6 flèches).
+  if(sum<60){
+   p.lowRun=(p.lowRun||0)+1;
+   if(p.lowRun>=3){p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;say('Ah, on va passer à la règle des 6 flèches !',true);effect('six','RÈGLE DES 6 FLÈCHES !','On reprend les bases');}
+  }else p.lowRun=0;
   if(after===0){finish(p);return}
  }
- darts=[];next();save();
+ darts=[];mult=1;document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x.dataset.mult==='1'));next();save();
 }
 $('validateTurn').onclick=validate501;
 $('undoTurn').onclick=()=>{if(!turnSnapshots.length)return toast('Aucun tour à annuler.');db.current=JSON.parse(turnSnapshots.pop());darts=[];save();say('Dernier tour annulé.')};

@@ -1,4 +1,4 @@
-MISE A JOUR DARTS MANAGER 4.2.0
+MISE A JOUR DARTS MANAGER 4.3.0
 1. Décompresser cette archive.
 2. Envoyer les 8 fichiers directement à la racine du dépôt GitHub (pas le ZIP et pas un sous-dossier).
 3. Valider le commit sur la branche main.
