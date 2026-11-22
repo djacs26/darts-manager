@@ -1,7 +1,9 @@
-INSTALLATION / MISE A JOUR
-1. Ouvrir le dépôt GitHub djacs26/darts-manager.
-2. Add file > Upload files.
-3. Envoyer tous les fichiers de ce dossier à la racine et valider Commit changes.
-4. GitHub Pages publie automatiquement.
-5. Sur Android, ouvrir https://djacs26.github.io/darts-manager/ dans Chrome puis Installer l'application.
-Pour forcer la mise à jour : fermer l'application, ouvrir le site dans Chrome et actualiser. Les données locales restent stockées sur l'appareil ; exporter une sauvegarde avant changement majeur.
+MISE A JOUR DARTS MANAGER 4.0.1
+1. Décompresser l'archive sur le téléphone.
+2. Dans GitHub, ouvrir le dépôt darts-manager puis Add file > Upload files.
+3. Envoyer les 8 fichiers contenus dans ce dossier directement à la racine du dépôt (pas le ZIP, pas un sous-dossier).
+4. Valider avec Commit changes sur la branche main.
+5. Attendre le déploiement GitHub Pages, puis ouvrir https://djacs26.github.io/darts-manager/ et actualiser.
+6. Si l'ancienne version reste affichée, fermer complètement le navigateur puis rouvrir le site. Le cache applicatif est renouvelé en version 4.
+
+IMPORTANT : les profils et statistiques sont enregistrés sur l'appareil. Exporter une sauvegarde avant toute suppression des données du navigateur.
