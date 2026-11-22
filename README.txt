@@ -1,5 +1,5 @@
-DARTS MANAGER — version 4.0.1
+DARTS MANAGER 4.2.0
 Application web installable pour fléchettes acier.
-Fonctions : profils joueurs, 501 double-out, Cricket, statistiques individuelles, historique, export/import JSON, coach d'entraînement 4 séances de 75 minutes, annonces vocales et commandes vocales compatibles avec le navigateur.
-
-Installation : publier les 8 fichiers à la racine du dépôt GitHub Pages. Ouvrir ensuite l'adresse GitHub Pages et actualiser. Les données sont stockées localement dans le navigateur : exporter une sauvegarde régulièrement.
+Fonctions : 501 double-out, Cricket, profils, statistiques, coach 4 séances de 75 minutes, synthèse vocale, reconnaissance vocale si navigateur compatible, animations de triples/doubles/180/victoire.
+Phrases vocales personnalisées : « 26, la Drôme ! » sur une volée de 26 ; « T’as une case pour ça ! » après une volée complète de 3 fléchettes totalisant 25 points ou moins ; « Ah, on va passer à la règle des 6 flèches ! » après 3 volées consécutives sous 60 points.
+Les compteurs personnalisés sont conservés dans les statistiques de chaque joueur après la fin de la partie.

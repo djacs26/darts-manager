@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="application-version" content="4.0.1"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
+<meta name="application-version" content="4.2.0"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg">
 <title>DARTS MANAGER</title>
 <style>
@@ -10,7 +10,20 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#14281a 0,#07100b 58%);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding-bottom:35px}
 header{padding:20px 16px 14px;display:flex;align-items:center;justify-content:space-between;max-width:900px;margin:auto}h1{font-size:25px;letter-spacing:1.5px;margin:0;font-weight:900}h1 span{color:var(--green)}.tag{font-size:11px;color:var(--green);border:1px solid var(--line);padding:6px 9px;border-radius:30px}
 nav{display:flex;gap:6px;padding:0 12px 14px;max-width:900px;margin:auto;overflow:auto}button,select,input{font:inherit}button{border:1px solid var(--line);background:#17251b;color:var(--txt);border-radius:12px;padding:12px;cursor:pointer;font-weight:700}button:active{transform:scale(.98)}button.primary{background:linear-gradient(135deg,#b8f77b,#72c85c);color:#10200f;border:0}.tab{white-space:nowrap;flex:1;font-size:12px}.tab.active{background:var(--green);color:#10200f;border-color:var(--green)}
-main{max-width:900px;margin:auto;padding:0 12px}.panel{background:linear-gradient(145deg,#14241a,#0e1912);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;box-shadow:0 12px 35px #0004}.hidden{display:none!important}.muted{color:var(--muted)}.tiny{font-size:12px;color:var(--muted)}label{display:block;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.8px;margin:0 0 6px}.field{background:#08120c;border:1px solid var(--line);border-radius:11px;padding:11px;color:var(--txt);width:100%;min-width:0}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1;min-width:0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.big{font-size:clamp(42px,12vw,68px);font-weight:950;letter-spacing:-2px;line-height:1.05}.green{color:var(--green)}.scorebox{text-align:center;padding:18px 8px}.scorebox .big{margin:7px 0}.notice{background:#1c3022;border:1px solid #294a32;border-radius:12px;padding:12px;margin:10px 0}.keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}.keypad button{padding:13px 3px;font-size:16px}.keypad button.special{background:#30452e;color:var(--green)}.dartrow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.dart{border:1px solid var(--line);padding:10px;border-radius:12px;text-align:center;background:#08120c}.dart b{display:block;font-size:20px}.multis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.multis button.selected{background:var(--green);color:#10200f}.actionrow{display:flex;gap:8px;margin-top:10px}.actionrow>*{flex:1}.playerline{display:flex;justify-content:space-between;gap:10px;padding:11px;border-bottom:1px solid var(--line)}.playerline.current{background:#203525;border-radius:10px;color:var(--green)}.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#09140d;border:1px solid var(--line);border-radius:12px;padding:12px}.stat strong{display:block;font-size:24px;color:var(--green)}.targetgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.target{background:#09140d;border:1px solid var(--line);border-radius:11px;padding:10px 3px;text-align:center}.target strong{display:block;font-size:18px}.closed{border-color:var(--green);color:var(--green)}.badge{font-size:11px;color:var(--green);border:1px solid var(--line);border-radius:30px;padding:4px 8px}.historyitem{padding:10px 0;border-bottom:1px solid var(--line)}.timer{font-size:54px;font-weight:900;text-align:center;color:var(--green);font-variant-numeric:tabular-nums}.progress{height:9px;background:#07100b;border-radius:20px;overflow:hidden}.progress>i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}.coachstep{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#0a150e}.coachstep.active{border-color:var(--green);box-shadow:0 0 0 1px #a8f06a44}.win{position:fixed;inset:0;background:#030805eF;z-index:20;display:grid;place-items:center;text-align:center;padding:25px;animation:fade .3s}.win .trophy{font-size:80px;animation:bounce .8s infinite alternate}.win h2{font-size:34px;color:var(--green)}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes bounce{to{transform:translateY(-14px) rotate(4deg)}}@keyframes pop{0%{transform:scale(.75);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}.flash{animation:pop .45s}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:#10200f;padding:12px 18px;border-radius:30px;font-weight:900;z-index:30;box-shadow:0 8px 30px #0008}.danger{color:var(--red)}footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
+main{max-width:900px;margin:auto;padding:0 12px}.panel{background:linear-gradient(145deg,#14241a,#0e1912);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;box-shadow:0 12px 35px #0004}.hidden{display:none!important}.muted{color:var(--muted)}.tiny{font-size:12px;color:var(--muted)}label{display:block;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.8px;margin:0 0 6px}.field{background:#08120c;border:1px solid var(--line);border-radius:11px;padding:11px;color:var(--txt);width:100%;min-width:0}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1;min-width:0}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.big{font-size:clamp(42px,12vw,68px);font-weight:950;letter-spacing:-2px;line-height:1.05}.green{color:var(--green)}.scorebox{text-align:center;padding:18px 8px}.scorebox .big{margin:7px 0}.notice{background:#1c3022;border:1px solid #294a32;border-radius:12px;padding:12px;margin:10px 0}.keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}.keypad button{padding:13px 3px;font-size:16px}.keypad button.special{background:#30452e;color:var(--green)}.dartrow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.dart{border:1px solid var(--line);padding:10px;border-radius:12px;text-align:center;background:#08120c}.dart b{display:block;font-size:20px}.multis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.multis button.selected{background:var(--green);color:#10200f}.actionrow{display:flex;gap:8px;margin-top:10px}.actionrow>*{flex:1}.playerline{display:flex;justify-content:space-between;gap:10px;padding:11px;border-bottom:1px solid var(--line)}.playerline.current{background:#203525;border-radius:10px;color:var(--green)}.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#09140d;border:1px solid var(--line);border-radius:12px;padding:12px}.stat strong{display:block;font-size:24px;color:var(--green)}.targetgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.target{background:#09140d;border:1px solid var(--line);border-radius:11px;padding:10px 3px;text-align:center}.target strong{display:block;font-size:18px}.closed{border-color:var(--green);color:var(--green)}.badge{font-size:11px;color:var(--green);border:1px solid var(--line);border-radius:30px;padding:4px 8px}.historyitem{padding:10px 0;border-bottom:1px solid var(--line)}.timer{font-size:54px;font-weight:900;text-align:center;color:var(--green);font-variant-numeric:tabular-nums}.progress{height:9px;background:#07100b;border-radius:20px;overflow:hidden}.progress>i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}.coachstep{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#0a150e}.coachstep.active{border-color:var(--green);box-shadow:0 0 0 1px #a8f06a44}.win{position:fixed;inset:0;background:#030805eF;z-index:20;display:grid;place-items:center;text-align:center;padding:25px;animation:fade .3s}.win .trophy{font-size:80px;animation:bounce .8s infinite alternate}.win h2{font-size:34px;color:var(--green)}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes bounce{to{transform:translateY(-14px) rotate(4deg)}}@keyframes pop{0%{transform:scale(.75);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}.flash{animation:pop .45s}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green);color:#10200f;padding:12px 18px;border-radius:30px;font-weight:900;z-index:30;box-shadow:0 8px 30px #0008}.danger{color:var(--red)}
+/* Effets de jeu */
+.fx-overlay{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle, #a8f06a30, #07100b00 68%);animation:fxFade 1.25s ease both}
+.fx-card{font-size:clamp(30px,9vw,58px);font-weight:1000;text-align:center;color:#fff;text-shadow:0 0 12px #a8f06a,0 0 32px #a8f06a;animation:fxZoom 1.2s cubic-bezier(.2,.9,.2,1) both;padding:20px}
+.fx-card small{display:block;font-size:17px;letter-spacing:2px;color:var(--green);margin-top:8px}
+.fx-triple{animation:triplePulse .65s ease 2}.fx-double{animation:doubleRing .9s ease}.fx-180{animation:screenFlash .8s ease}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}.confetti i{position:absolute;top:-20px;width:9px;height:16px;background:var(--green);animation:confettiFall 2.1s linear forwards}.confetti i:nth-child(3n){background:#ffd36b}.confetti i:nth-child(3n+1){background:#fff}.confetti i:nth-child(4n){background:#5dbdff}
+@keyframes fxFade{0%{opacity:0}15%,75%{opacity:1}100%{opacity:0}}
+@keyframes fxZoom{0%{transform:scale(.25) rotate(-8deg);opacity:0}25%{transform:scale(1.15) rotate(2deg);opacity:1}75%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:0}}
+@keyframes triplePulse{0%,100%{box-shadow:0 0 0 0 #a8f06a00}50%{box-shadow:0 0 0 8px #a8f06a66,0 0 30px #a8f06a}}
+@keyframes doubleRing{0%{box-shadow:0 0 0 0 #ffd36b00}50%{box-shadow:0 0 0 10px #ffd36b88,0 0 28px #ffd36b}100%{box-shadow:0 0 0 0 #ffd36b00}}
+@keyframes screenFlash{0%,100%{filter:none}20%{filter:brightness(1.9) saturate(1.7)}45%{filter:none}}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 @media(min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
 </style></head>
 <body>
@@ -34,7 +47,7 @@ main{max-width:900px;margin:auto;padding:0 12px}.panel{background:linear-gradien
 </section>
 <section id="settings" class="hidden"><div class="panel"><h2>Réglages</h2><label>ANNONCES VOCALES</label><select id="voiceMode" class="field"><option value="all">Toutes les annonces</option><option value="important">Scores importants et fin de partie</option><option value="off">Désactivées</option></select><label style="margin-top:12px">VITESSE DE LA VOIX</label><input id="voiceRate" type="range" min=".75" max="1.2" step=".05" value="1" class="field"><button id="testVoice" class="primary" style="width:100%;margin-top:12px">TESTER LA VOIX</button><div class="notice">Les données sont conservées sur cet appareil. Exporte régulièrement ta sauvegarde pour ne pas perdre tes profils et statistiques.</div><button id="clearData" class="danger" style="width:100%">EFFACER TOUTES LES DONNÉES</button></div></section>
 </main><footer>DARTS MANAGER · application installable · sauvegarde locale</footer>
-<div id="winModal" class="win hidden"><div><div class="trophy">🏆</div><h2>VICTOIRE !</h2><p id="winnerText"></p><button class="primary" id="closeWin">CONTINUER</button></div></div><div id="toast" class="toast hidden"></div>
+<div id="winModal" class="win hidden"><div><div class="trophy">🏆</div><h2>VICTOIRE !</h2><p id="winnerText"></p><button class="primary" id="closeWin">CONTINUER</button></div></div><div id="toast" class="toast hidden"></div><div id="fxLayer"></div><div id="confettiLayer"></div>
 <script>
 const $=id=>document.getElementById(id),targets=['20','19','18','17','16','15','Bull'];
 const fresh=()=>({players:[],history:[],current:null,settings:{voiceMode:'all',voiceRate:1},training:{seconds:4500}});
@@ -42,10 +55,10 @@ function normalizeDB(raw){
  const d=(raw&&typeof raw==='object')?raw:fresh();
  d.players=Array.isArray(d.players)?d.players:[]; d.history=Array.isArray(d.history)?d.history:[];
  d.settings={voiceMode:'all',voiceRate:1,...(d.settings||{})};
- d.players=d.players.filter(p=>p&&typeof p.name==='string').map(p=>({id:p.id||('p-'+Math.random().toString(36).slice(2)),name:p.name,stats:{matches:0,wins:0,visits:0,pointsScored:0,bestVisit:0,average:0,cricketWins:0,cricketPoints:0,doublesHit:0,...(p.stats||{})}}));
+ d.players=d.players.filter(p=>p&&typeof p.name==='string').map(p=>({id:p.id||('p-'+Math.random().toString(36).slice(2)),name:p.name,stats:{matches:0,wins:0,visits:0,pointsScored:0,bestVisit:0,average:0,cricketWins:0,cricketPoints:0,doublesHit:0,case25:0,sixDartAdvice:0,...(p.stats||{})}}));
  if(d.current&&Array.isArray(d.current.players)){
   d.current.turn=Math.max(0,Math.min(Number(d.current.turn)||0,d.current.players.length-1));
-  d.current.players=d.current.players.map(p=>({score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,...p,marks:{...Object.fromEntries(targets.map(t=>[t,0])),...(p.marks||{})}}));
+  d.current.players=d.current.players.map(p=>({score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,case25:0,lowRun:0,sixDartAdvice:0,...p,marks:{...Object.fromEntries(targets.map(t=>[t,0])),...(p.marks||{})}}));
  } else d.current=null;
  return d;
 }
@@ -53,10 +66,15 @@ let db;try{db=normalizeDB(JSON.parse(localStorage.getItem('dartsManagerDB')))}ca
 let mult=1,darts=[],coachInterval=null,recognition=null,turnSnapshots=[];
 function save(){try{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()}catch(e){console.error(e);toast('Erreur de sauvegarde : mémoire du navigateur indisponible.')}}
 function say(t,important=false){if(!('speechSynthesis'in window)||db.settings.voiceMode==='off'||(db.settings.voiceMode==='important'&&!important))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=Number(db.settings.voiceRate||1);speechSynthesis.speak(u)}
-function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
+function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
+function effect(type,title,subtitle=''){
+ const layer=$('fxLayer');layer.innerHTML='';const wrap=document.createElement('div');wrap.className='fx-overlay '+(type==='180'?'fx-180':type==='triple'?'fx-triple':type==='double'?'fx-double':'');
+ const card=document.createElement('div');card.className='fx-card';card.innerHTML=esc(title)+(subtitle?'<small>'+esc(subtitle)+'</small>':'');wrap.append(card);layer.append(wrap);setTimeout(()=>{if(layer.contains(wrap))wrap.remove()},1400);
+}
+function celebrate(){const layer=$('confettiLayer');layer.innerHTML='';for(let i=0;i<65;i++){const bit=document.createElement('i');bit.style.left=(Math.random()*100)+'%';bit.style.animationDelay=(Math.random()*.65)+'s';bit.style.transform='rotate('+(Math.random()*180)+'deg)';layer.append(bit)}setTimeout(()=>layer.innerHTML='',3000)}
 function tab(n){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==n));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===n))}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
-function makePlayer(name){return{id:crypto.randomUUID(),name,stats:{matches:0,wins:0,visits:0,pointsScored:0,bestVisit:0,average:0,cricketWins:0,cricketPoints:0,doublesHit:0}}}
+function makePlayer(name){return{id:crypto.randomUUID(),name,stats:{matches:0,wins:0,visits:0,pointsScored:0,bestVisit:0,average:0,cricketWins:0,cricketPoints:0,doublesHit:0,case25:0,sixDartAdvice:0}}}
 $('addPlayer').onclick=()=>{let n=$('playerName').value.trim();if(!n)return toast('Entre un nom.');if(db.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Ce joueur existe déjà.');db.players.push(makePlayer(n));$('playerName').value='';save();toast(n+' ajouté.')};
 function renderPlayers(){
  $('playersList').innerHTML=db.players.map(p=>`<div class="playerline"><b>${esc(p.name)}</b><span class="tiny">${p.stats.matches||0} matchs · ${p.stats.wins||0} victoires</span><button data-del="${p.id}" class="danger">×</button></div>`).join('')||'<p class="muted">Aucun joueur. Ajoute un profil ci-dessus.</p>';
@@ -72,7 +90,7 @@ $('newGame').onclick=()=>{
   db=normalizeDB(db); if(!db.players.length){toast('Ajoute un joueur dans l’onglet JOUEURS.');tab('players');return;}
   let first=$('starter').value; if(!db.players.some(p=>p.id===first))first=db.players[0].id;
   const list=[...db.players].sort((a,b)=>a.id===first?-1:b.id===first?1:0);
-  db.current={game:$('game').value==='cricket'?'cricket':'501',players:list.map(p=>({id:p.id,name:p.name,score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,turnDarts:0})),turn:0,log:[],started:Date.now()};
+  db.current={game:$('game').value==='cricket'?'cricket':'501',players:list.map(p=>({id:p.id,name:p.name,score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,turnDarts:0,case25:0,lowRun:0,sixDartAdvice:0})),turn:0,log:[],started:Date.now()};
   darts=[];turnSnapshots=[];save();tab('match');$('matchNotice').textContent='Partie lancée. '+list[0].name+' commence.';say('Nouvelle partie. '+list[0].name+', à toi de jouer.',true);$('gameArea').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){console.error(e);toast('Impossible de lancer la partie : '+e.message)}
 };
@@ -88,13 +106,35 @@ function renderMatch(){
  $('dartSlots').innerHTML=[0,1,2].map(i=>`<div class="dart">Fléchette ${i+1}<b>${darts[i]?.label||'—'}</b><span class="tiny">${darts[i]?.score??0} pts</span></div>`).join('');if(m.game==='cricket')renderCricket();
 }
 function renderCricket(){let m=db.current;$('cricketBoard').innerHTML=`<div class="targetgrid">${targets.map(t=>`<div class="target"><b>${t}</b></div>`).join('')}</div>`+m.players.map(p=>`<div style="margin-top:8px"><b>${esc(p.name)} · ${p.points} pts</b><div class="targetgrid">${targets.map(t=>`<div class="target ${p.marks[t]>=3?'closed':''}"><strong>${'●'.repeat(Math.min(3,p.marks[t]))}${'○'.repeat(Math.max(0,3-p.marks[t]))}</strong></div>`).join('')}</div></div>`).join('')}
-function pushDart(value,label){if(!db.current||db.current.game!=='501'||darts.length>=3)return;darts.push({score:value,label});renderMatch();if(value===180)say('Cent quatre-vingts ! Magnifique !',true)}
+function pushDart(value,label){
+ if(!db.current||db.current.game!=='501'||darts.length>=3)return;
+ darts.push({score:value,label});renderMatch();
+ if(label.startsWith('T')){effect('triple','TRIPLE !',label);say('Bien joué ! Un triple ! Continue comme ça.',true)}
+ else if(label.startsWith('D')||label==='DBull'){effect('double','DOUBLE !',label);say('Bien joué ! Double réussi !',true)}
+ }
 document.querySelectorAll('[data-mult]').forEach(b=>b.onclick=()=>{mult=Number(b.dataset.mult);document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x===b))});
 const keypad=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'25','BULL','EFFACER'];$('keypad').innerHTML=keypad.map(n=>`<button class="${['25','BULL','EFFACER'].includes(String(n))?'special':''}" data-key="${n}">${n}</button>`).join('');
 $('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){pushDart(50,'DBull');return}let n=Number(k),v=n===25?25*mult:n*mult;pushDart(v,(mult===1?'S':mult===2?'D':'T')+n)};
 $('undoDart').onclick=()=>{darts.pop();renderMatch()};
 function next(){let m=db.current;m.turn=(m.turn+1)%m.players.length;darts=[];renderMatch()}
-function validate501(){let m=db.current;if(!m||m.game!=='501')return;if(!darts.length)return toast('Saisis au moins une fléchette.');turnSnapshots.push(JSON.stringify(m));let p=active(),sum=darts.reduce((a,d)=>a+d.score,0),after=p.score-sum,last=darts[darts.length-1];p.visits++;let bust=after<0||after===1||(after===0&&!(/^(D|DBull)/.test(last.label)));if(bust){$('turnMessage').textContent='BUST ! Score inchangé.';say('Bust ! Le score ne change pas.',true)}else{p.total+=sum;p.best=Math.max(p.best,sum);p.score=after;$('turnMessage').textContent=`${sum} points ! Il te reste ${after}.`;say(`${sum} points. Il te reste ${after}.`,sum>=100);if(sum>=100)toast(sum===180?'ONE HUNDRED AND EIGHTY !':'Très belle volée !');if(after===0){finish(p);return}}darts=[];next();save()}
+function validate501(){
+ let m=db.current;if(!m||m.game!=='501')return;if(!darts.length)return toast('Saisis au moins une fléchette.');
+ turnSnapshots.push(JSON.stringify(m));let p=active(),sum=darts.reduce((a,d)=>a+d.score,0),after=p.score-sum,last=darts[darts.length-1];p.visits++;
+ let bust=after<0||after===1||(after===0&&!(/^(D|DBull)/.test(last.label)));
+ if(bust){$('turnMessage').textContent='BUST ! Score inchangé.';say('Bust ! Le score ne change pas.',true);effect('bust','BUST !','Le score ne change pas');}
+ else{
+  p.total+=sum;p.best=Math.max(p.best,sum);p.score=after;
+  $('turnMessage').textContent=`${sum} points ! Il te reste ${after}.`;
+  if(darts.length===3 && sum<=25){p.case25=(p.case25||0)+1;effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');say('T’as une case pour ça !',true);}
+  else if(sum===26){say('26, la Drôme !',true);effect('26','26, LA DRÔME !','');}
+  else if(sum===180){say('Cent quatre-vingts ! Il te reste '+after+'. Magnifique !',true);effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();}
+  else {say(`${sum} points, il te reste ${after}.`,sum>=60);if(sum>=100){toast('Très belle volée !');say('Magnifique volée ! Continue comme ça !',true)}else if(sum>=60){say('Bien joué ! Belle volée.',true)}}
+  if(sum<60){p.lowRun=(p.lowRun||0)+1;if(p.lowRun>=3){p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;say('Ah, on va passer à la règle des 6 flèches !',true);effect('six','RÈGLE DES 6 FLÈCHES !','On reprend les bases');}}
+  else p.lowRun=0;
+  if(after===0){finish(p);return}
+ }
+ darts=[];next();save();
+}
 $('validateTurn').onclick=validate501;
 $('undoTurn').onclick=()=>{if(!turnSnapshots.length)return toast('Aucun tour à annuler.');db.current=JSON.parse(turnSnapshots.pop());darts=[];save();say('Dernier tour annulé.')};
 $('nextPlayer').onclick=()=>{if(!db.current)return;next();say('Au tour de '+active().name)};
@@ -103,7 +143,7 @@ function addCricket(){
  let p=active(),t=$('cricketTarget').value,n=Number($('cricketMarks').value),old=p.marks[t]||0,total=old+n,newMarks=Math.min(3,total),extra=Math.max(0,total-3),value=t==='Bull'?25:Number(t);
  if(extra&&m.players.some(q=>q.id!==p.id&&q.marks[t]<3))p.points+=extra*value;
  p.marks[t]=newMarks;p.turnDarts=(p.turnDarts||0)+1;m.log.push({player:p.name,target:t,marks:n});
- say(`${p.name}, ${n} marque${n>1?'s':''} sur ${t}.`,true);
+ if(n===3){effect('triple','TRIPLE !',String(t));say('Excellent ! Trois marques sur '+t+'.',true)}else{say(`${p.name}, ${n} marque${n>1?'s':''} sur ${t}.`,true)}
  const allClosed=targets.every(x=>p.marks[x]>=3),ahead=m.players.every(q=>q.id===p.id||p.points>=q.points);
  if(allClosed&&ahead){finish(p);return;}
  if(p.turnDarts>=3){p.turnDarts=0;next();}else renderMatch();save();
@@ -111,12 +151,12 @@ function addCricket(){
 $('addCricket').onclick=addCricket;
 function finish(p){
  let m=db.current;if(!m)return;
- m.players.forEach(q=>{let owner=db.players.find(x=>x.id===q.id);if(!owner)return;owner.stats.matches=(owner.stats.matches||0)+1;if(m.game==='501'){owner.stats.visits=(owner.stats.visits||0)+q.visits;owner.stats.pointsScored=(owner.stats.pointsScored||0)+q.total;owner.stats.bestVisit=Math.max(owner.stats.bestVisit||0,q.best);owner.stats.average=owner.stats.visits?owner.stats.pointsScored/owner.stats.visits:0;} });
+ m.players.forEach(q=>{let owner=db.players.find(x=>x.id===q.id);if(!owner)return;owner.stats.matches=(owner.stats.matches||0)+1;owner.stats.case25=(owner.stats.case25||0)+(q.case25||0);owner.stats.sixDartAdvice=(owner.stats.sixDartAdvice||0)+(q.sixDartAdvice||0);if(m.game==='501'){owner.stats.visits=(owner.stats.visits||0)+q.visits;owner.stats.pointsScored=(owner.stats.pointsScored||0)+q.total;owner.stats.bestVisit=Math.max(owner.stats.bestVisit||0,q.best);owner.stats.average=owner.stats.visits?owner.stats.pointsScored/owner.stats.visits:0;} });
  let owner=db.players.find(x=>x.id===p.id);if(owner){owner.stats.wins=(owner.stats.wins||0)+1;if(m.game==='cricket')owner.stats.cricketWins=(owner.stats.cricketWins||0)+1;}
- db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:m.game,winner:p.name});db.current=null;save();$('winnerText').textContent=p.name+' remporte la partie !';$('winModal').classList.remove('hidden');say('Fin de partie ! Victoire de '+p.name+' ! Bravo !',true)
+ db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:m.game,winner:p.name});db.current=null;save();$('winnerText').textContent=p.name+' remporte la partie !';$('winModal').classList.remove('hidden');celebrate();say('Fin de partie ! Victoire ! Bravo '+p.name+' !',true)
 }
 $('closeWin').onclick=()=>$('winModal').classList.add('hidden');
-function renderStats(){let p=db.players.find(x=>x.id===$('statsPlayer').value)||db.players[0];if(!p){$('statsContent').innerHTML='<p class="muted">Ajoute un joueur pour afficher ses statistiques.</p>';$('history').innerHTML='';return}$('statsPlayer').value=p.id;let vals=[['Matchs',p.stats.matches],['Victoires',p.stats.wins],['Moyenne / volée',Number(p.stats.average||0).toFixed(1)],['Meilleure volée',p.stats.bestVisit],['Points marqués',p.stats.pointsScored],['Victoires Cricket',p.stats.cricketWins]];$('statsContent').innerHTML=vals.map(v=>`<div class="stat"><span class="muted">${v[0]}</span><strong>${v[1]}</strong></div>`).join('');$('history').innerHTML=db.history.slice(0,20).map(h=>`<div class="historyitem">${esc(h.date)} · ${h.game.toUpperCase()} · <b>${esc(h.winner)}</b></div>`).join('')||'<p class="muted">Aucune partie terminée.</p>'}
+function renderStats(){let p=db.players.find(x=>x.id===$('statsPlayer').value)||db.players[0];if(!p){$('statsContent').innerHTML='<p class="muted">Ajoute un joueur pour afficher ses statistiques.</p>';$('history').innerHTML='';return}$('statsPlayer').value=p.id;let vals=[['Matchs',p.stats.matches],['Victoires',p.stats.wins],['Moyenne / volée',Number(p.stats.average||0).toFixed(1)],['Meilleure volée',p.stats.bestVisit],['Points marqués',p.stats.pointsScored],['Victoires Cricket',p.stats.cricketWins],['T’as une case pour ça',p.stats.case25||0],['Règle des 6 flèches',p.stats.sixDartAdvice||0]];$('statsContent').innerHTML=vals.map(v=>`<div class="stat"><span class="muted">${v[0]}</span><strong>${v[1]}</strong></div>`).join('');$('history').innerHTML=db.history.slice(0,20).map(h=>`<div class="historyitem">${esc(h.date)} · ${h.game.toUpperCase()} · <b>${esc(h.winner)}</b></div>`).join('')||'<p class="muted">Aucune partie terminée.</p>'}
 $('statsPlayer').onchange=renderStats;
 $('export').onclick=()=>download(JSON.stringify(db,null,2),'darts-manager-sauvegarde.json','application/json');
 function download(data,name,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
