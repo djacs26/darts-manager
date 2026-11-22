@@ -1,6 +1,21 @@
-INSTALLATION GITHUB PAGES
-1. Extraire cette archive.
-2. Envoyer les 8 fichiers directement a la racine du depot darts-manager, en remplacant les fichiers existants.
-3. Valider Commit changes sur main.
-4. Attendre le deploiement GitHub Pages puis ouvrir https://djacs26.github.io/darts-manager/
-La version affichee en haut doit indiquer v4.4.0.
+MISE A JOUR COMPLETE — DARTS MANAGER
+
+1. Téléchargez et décompressez DARTS_MANAGER_TOUT_LE_PROJET.zip.
+2. Ouvrez https://github.com/djacs26/darts-manager/upload/main
+3. Envoyez TOUS les fichiers extraits à la racine du dépôt, en conservant exactement les noms.
+4. Validez avec Commit changes.
+5. Attendez la publication GitHub Pages.
+6. Fermez complètement l'application, puis rouvrez https://djacs26.github.io/darts-manager/
+
+Fichiers à la racine :
+index.html
+sw.js
+manifest.webmanifest
+icon.svg
+icon-192.png
+icon-512.png
+README.md
+INSTALLATION.txt
+
+Avant une mise à jour importante, exportez une sauvegarde JSON depuis l'onglet Stats.
+Les données sont locales à chaque appareil et ne se synchronisent pas automatiquement.
