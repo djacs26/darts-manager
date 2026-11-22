@@ -49,7 +49,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
 <div id="scoreCricket" class="hidden">
 <div class="targetgrid" id="cricketBoard"></div>
 <div class="row" style="margin-top:12px"><div><label>CIBLE</label><select id="cricketTarget"></select></div><div><label>MARQUES (1 À 3)</label><select id="cricketHits"><option>1</option><option>2</option><option>3</option></select></div></div>
-<button class="primary" id="submitCricket" style="width:100%">VALIDER LES MARQUES</button>
+<div class="row"><button id="undoCricket">ANNULER TOUR</button><button class="primary" id="submitCricket">VALIDER LES MARQUES</button></div>
 <p class="tiny">1 = simple, 2 = double, 3 = triple. Les marques excédentaires marquent des points si un adversaire n'a pas fermé la cible.</p>
 </div>
 <div id="standings" class="players"></div>
@@ -73,7 +73,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
 Lundi : précision et groupement · Mercredi : triples et Cricket ·
 Vendredi : doubles et sorties · Dimanche : 501 et bilan.
 Chaque séance dure 1 h 15 minimum.</div>
-<div class="notice"><b>Planning hebdomadaire</b><br>Lundi : précision et groupement · Mercredi : triples et Cricket · Vendredi : doubles et sorties · Dimanche : 501 et bilan. Chaque séance dure au moins 1 h 15.</div>
+
 <div id="trainingSteps"></div><button class="primary" id="startTraining" style="width:100%">LANCER LE CHRONO 75 MIN</button><div id="timer" class="big green">75:00</div><button id="pauseTraining" style="width:100%">PAUSE / REPRENDRE</button>
 </div>
 <div class="card"><h3>Commandes vocales</h3><p class="muted">Si ton navigateur Android prend en charge la reconnaissance vocale, touche le micro et annonce par exemple : « score 60 », le nom d’un joueur, « joueur suivant », « annuler », ou en Cricket « triple 20 ».</p><button class="primary" id="voice" style="width:100%">🎙 ACTIVER LE MICRO</button><div id="voiceStatus" class="notice">Micro désactivé. Les annonces vocales se déclenchent automatiquement si ton navigateur les prend en charge.</div><p class="tiny">La reconnaissance vocale nécessite une connexion sécurisée (HTTPS) et l'autorisation du micro. Le micro n'écoute que lorsque tu l'actives.</p></div>
@@ -83,10 +83,10 @@ Chaque séance dure 1 h 15 minimum.</div>
 <script>
 const $=id=>document.getElementById(id);
 const fresh=()=>({players:[],history:[],current:null,training:{seconds:4500,running:false}});
-let db=JSON.parse(localStorage.getItem('dartsManagerDB')||'null')||fresh();
+let db;try{db=JSON.parse(localStorage.getItem('dartsManagerDB')||'null')||fresh();}catch(error){db=fresh();}
 // Migration douce : conserve les profils et anciennes statistiques déjà enregistrés.
-(db.players||[]).forEach(p=>{p.stats=p.stats||{};for(const k of ['matches','wins','visits','pointsScored','bestVisit','cricketWins','cricketPoints','lowVisits'])p.stats[k]=Number(p.stats[k]||0);p.lastAverage=Number(p.lastAverage||0);});
-if(db.current&&db.current.players)db.current.players.forEach(p=>{if(typeof p.lowVisits!=='number')p.lowVisits=0;if(typeof p.lowStreak!=='number')p.lowStreak=0;});
+db.players=Array.isArray(db.players)?db.players:[];db.history=Array.isArray(db.history)?db.history:[];db.training=db.training||{seconds:4500,running:false};db.training.seconds=Math.max(0,Math.min(4500,Number(db.training.seconds)||4500));db.players.forEach(p=>{p.stats=p.stats||{};for(const k of ['matches','wins','visits','pointsScored','bestVisit','cricketWins','cricketPoints','lowVisits'])p.stats[k]=Number(p.stats[k]||0);p.lastAverage=Number(p.lastAverage||0);});
+if(db.current&&Array.isArray(db.current.players)){db.current.turn=Math.max(0,Math.min(db.current.players.length-1,Number(db.current.turn)||0));db.current.players.forEach(p=>{if(typeof p.lowVisits!=='number')p.lowVisits=0;if(typeof p.lowStreak!=='number')p.lowStreak=0;if(!p.marks)p.marks=Object.fromEntries(['20','19','18','17','16','15','Bull'].map(t=>[t,0]));p.score=Number(p.score??501);p.points=Number(p.points||0);p.visits=Number(p.visits||0);p.total=Number(p.total||0);p.best=Number(p.best||0);});}
 let undoStack=[],timerId=null,recognition=null;
 // Annonces vocales : utilise la synthèse vocale du navigateur (si disponible).
 function speak(message){
@@ -118,7 +118,7 @@ $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=
  if(p.lowStreak===3){setTimeout(()=>speak("Ah, on va passer à la règle des 6 flèches !"),900);p.lowStreak=0;}if(after<0||after===1||(after===0&&!lastDartDouble)){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';}else{p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';}delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save()};
 $('visitScore').addEventListener('input',()=>delete $('visitScore').dataset.double);
 $('visitScore').addEventListener('change',()=>{});
-$('undo501').onclick=()=>{if(!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
+$('undo501').onclick=()=>{if(!db.current||db.current.game!=='501'||!undoStack.length)return;db.current=JSON.parse(undoStack.pop());resetDarts();save()};
 let dartEntries=[],dartMultiplier=1;
 $('dartNumbers').innerHTML=Array.from({length:20},(_,i)=>i+1).map(n=>`<button type="button" data-number="${n}">${n}</button>`).join('')+'<button type="button" class="special" data-number="25">25</button><button type="button" class="special" data-number="50">50</button>';
 function refreshDarts(){
@@ -136,6 +136,7 @@ $('dartUndo').onclick=()=>{dartEntries.pop();refreshDarts()};
 function resetDarts(){dartEntries=[];dartMultiplier=1;refreshDarts()}
 refreshDarts();
 $('cricketTarget').innerHTML=targets.map(t=>`<option>${t}</option>`).join('');
+$('undoCricket').onclick=()=>{if(!db.current||db.current.game!=='cricket'||!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
 $('submitCricket').onclick=()=>{let m=db.current;if(!m||m.game!=='cricket')return;let p=active(),t=$('cricketTarget').value,h=Number($('cricketHits').value),old=p.marks[t],excess=Math.max(0,old+h-3),v=t==='Bull'?25: Number(t);let opponentsOpen=m.players.some(x=>x.id!==p.id&&x.marks[t]<3);undoStack.push(JSON.stringify(m));p.marks[t]=Math.min(3,old+h);if(opponentsOpen)p.points+=excess*v;p.visits++;m.log.push({player:p.name,target:t,hits:h,points:p.points});let closed=targets.every(k=>p.marks[k]>=3),maxOpp=Math.max(...m.players.filter(x=>x.id!==p.id).map(x=>x.points));if(closed&&p.points>=maxOpp){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' : '+h+' marque(s) sur '+t+'.';save()};
 function finishMatch(winnerId){let m=db.current,w=m.players.find(p=>p.id===winnerId);db.players.forEach(profile=>{let p=m.players.find(x=>x.id===profile.id);if(!p)return;profile.stats.matches++;if(profile.id===winnerId){profile.stats.wins++;if(m.game==='cricket')profile.stats.cricketWins++;}if(m.game==='501'){profile.stats.visits+=p.visits;profile.stats.pointsScored+=p.total;profile.stats.bestVisit=Math.max(profile.stats.bestVisit,p.best);profile.stats.lowVisits=(profile.stats.lowVisits||0)+(p.lowVisits||0);profile.lastAverage=p.visits?p.total/p.visits:0;}else profile.stats.cricketPoints+=p.points;});db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:m.game,winner:w.name,log:m.log});db.history=db.history.slice(0,100);db.current=null;$('matchNotice').textContent='Victoire de '+w.name+' ! Partie enregistrée.';effect('VICTOIRE : '+w.name+' !');speak('Victoire de '+w.name+' !');save()}
 $('finish').onclick=()=>{if(!db.current)return;if(confirm('Terminer et enregistrer cette partie sans vainqueur ?')){db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:db.current.game,winner:'Partie interrompue',log:db.current.log});db.current=null;save()}};
@@ -144,24 +145,24 @@ function renderPlayers(){ $('playerList').innerHTML=db.players.map(p=>`<div clas
 function renderMatch(){let m=db.current; $('activeArea').classList.toggle('hidden',!m);if(!m)return;$('game').value=m.game;$('activeName').textContent=active().name;$('score501').classList.toggle('hidden',m.game!=='501');$('scoreCricket').classList.toggle('hidden',m.game!=='cricket');$('remaining').textContent=active().score;$('standings').innerHTML=m.players.map((p,i)=>`<div class="player ${i===m.turn?'current':''}"><b>${esc(p.name)}</b><span>${m.game==='501'?p.score+' restants':p.points+' pts'}</span></div>`).join('');$('cricketBoard').innerHTML=m.players.map(p=>`<div class="card"><b>${esc(p.name)}</b><div class="targetgrid">${targets.map(t=>`<div class="target ${p.marks[t]>=3?'closed':''}"><small>${t}</small><strong>${'●'.repeat(p.marks[t])}${'○'.repeat(3-p.marks[t])}</strong></div>`).join('')}</div><b>${p.points} pts</b></div>`).join('')}
 function renderStats(){let s=$('statsPlayer'),old=s.value;s.innerHTML=db.players.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(db.players.some(p=>p.id===old))s.value=old;let p=db.players.find(x=>x.id===s.value);$('statsContent').innerHTML=p?`<div class="stats"><div class="stat"><span class="muted">Matchs</span><b>${p.stats.matches}</b></div><div class="stat"><span class="muted">Victoires</span><b>${p.stats.wins}</b></div><div class="stat"><span class="muted">Moyenne / volée 501</span><b>${p.lastAverage.toFixed(1)}</b></div><div class="stat"><span class="muted">Meilleure volée</span><b>${p.stats.bestVisit}</b></div><div class="stat"><span class="muted">Volées de 25 ou moins</span><b>${p.stats.lowVisits||0}</b></div><div class="stat"><span class="muted">Points marqués en 501</span><b>${p.stats.pointsScored||0}</b></div><div class="stat"><span class="muted">Points Cricket</span><b>${p.stats.cricketPoints}</b></div><div class="stat"><span class="muted">Victoires Cricket</span><b>${p.stats.cricketWins}</b></div></div>`:'<div class="muted">Ajoute un joueur pour voir ses statistiques.</div>';$('history').innerHTML=db.history.slice(0,12).map(h=>`<div class="notice">${esc(h.date)} · ${h.game.toUpperCase()} · ${esc(h.winner)}</div>`).join('')||'Aucune partie terminée.'}
 $('statsPlayer').onchange=renderStats;
-$('export').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='darts-manager-sauvegarde.json';a.click();URL.revokeObjectURL(a.href)};
+$('export').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='darts-manager-sauvegarde.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.players)||!Array.isArray(data.history))throw new Error('Format invalide');if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;db=data;save();alert('Sauvegarde restaurée.');}catch(err){alert('Impossible de lire cette sauvegarde JSON.');}e.target.value='';};
-$('game').onchange=()=>{if(db.current)alert('Termine la partie en cours avant de changer de jeu.')};
+$('game').onchange=()=>{if(db.current){$('game').value=db.current.game;alert('Termine la partie en cours avant de changer de jeu.')}};
 let trainRunning=false;
 function updateTimer(){let s=db.training.seconds;$('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 $('startTraining').onclick=()=>{db.training.seconds=4500;trainRunning=true;if(timerId)clearInterval(timerId);timerId=setInterval(()=>{if(trainRunning&&db.training.seconds>0){db.training.seconds--;updateTimer();localStorage.setItem('dartsManagerDB',JSON.stringify(db));}if(db.training.seconds<=0){clearInterval(timerId);trainRunning=false;alert('Séance terminée !');}},1000);updateTimer()};
-$('pauseTraining').onclick=()=>{trainRunning=!trainRunning;$('pauseTraining').textContent=trainRunning?'PAUSE':'REPRENDRE'};
+$('pauseTraining').onclick=()=>{if(!timerId&&db.training.seconds===4500){$('voiceStatus').textContent='Lance d’abord une séance.';return;}trainRunning=!trainRunning;$('pauseTraining').textContent=trainRunning?'PAUSE':'REPRENDRE'};
 $('voice').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('voiceStatus').textContent='Reconnaissance vocale non prise en charge ici. Utilise la saisie tactile.';return;}if(recognition){recognition.stop();recognition=null;$('voiceStatus').textContent='Micro désactivé.';return;}recognition=new SR();recognition.lang='fr-FR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{
  let said=e.results[e.results.length-1][0].transcript.toLowerCase().trim();
  $('voiceStatus').textContent='Entendu : '+said;
  if(!db.current){$('voiceStatus').textContent+=' — aucune partie en cours.';return;}
- if(said.includes('annuler')){$('undo501').click();return;}
+ if(said.includes('annuler')){if(db.current.game==='501')$('undo501').click();else $('undoCricket').click();return;}
  if(said.includes('suivant')){nextTurn();save();speak('Au tour de '+active().name);return;}
  const named=db.current.players.findIndex(p=>said.includes(p.name.toLowerCase()));
  if(named>=0){db.current.turn=named;save();speak('Au tour de '+active().name);return;}
  if(db.current.game==='501'){
    const m=said.match(/(?:score\s*)?(\d{1,3})/);
-   if(m){$('visitScore').value=m[1];$('visitScore').dataset.double='no';$('submit501').click();}
+   if(m){$('visitScore').value=m[1];const finish=said.match(/(?:double|doubler)\s*(20|19|18|17|16|15|14|13|12|11|10|9|8|7|6|5|4|3|2|1|bull|50)\s*$/);$('visitScore').dataset.double=finish?'yes':'no';$('submit501').click();}
    else $('voiceStatus').textContent='Dis un score, par exemple : score 60.';
    return;
  }
@@ -178,6 +179,6 @@ $('voice').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRe
 };
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-renderAll();updateTimer();
+try{localStorage.setItem('dartsManagerDB',JSON.stringify(db));}catch(error){console.warn('Sauvegarde locale indisponible',error)}renderAll();updateTimer();
 </script>
 </body></html>
