@@ -78,7 +78,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
 <div class="notice"><b>Planning hebdomadaire</b><br>Lundi : précision et groupement · Mercredi : triples et Cricket · Vendredi : doubles et sorties · Dimanche : 501 et bilan. Chaque séance dure au moins 1 h 15.</div>
 <div id="trainingSteps"></div><button class="primary" id="startTraining" style="width:100%">LANCER LE CHRONO 75 MIN</button><div id="timer" class="big green">75:00</div><button id="pauseTraining" style="width:100%">PAUSE / REPRENDRE</button>
 </div>
-<div class="card"><h3>Commandes vocales</h3><p class="muted">Si ton navigateur Android prend en charge la reconnaissance vocale, touche le micro et annonce par exemple : « score 60 », « joueur suivant », « annuler ».</p><button class="primary" id="voice" style="width:100%">🎙 ACTIVER LE MICRO</button><div id="voiceStatus" class="notice">Micro désactivé. Les annonces vocales se déclenchent automatiquement si ton navigateur les prend en charge.</div><p class="tiny">La reconnaissance vocale nécessite une connexion sécurisée (HTTPS) et l'autorisation du micro. Le micro n'écoute que lorsque tu l'actives.</p></div>
+<div class="card"><h3>Commandes vocales</h3><p class="muted">Teste d'abord la voix du coach. Le bouton de test vérifie que ton téléphone arrive bien à parler.</p><button class="primary" id="testSpeech" style="width:100%">🔊 TESTER LA VOIX</button><div id="speechStatus" class="notice" aria-live="polite">Voix non testée.</div><p class="muted">Pour saisir les scores à la voix, active ensuite le micro et annonce par exemple : « score 60 », « joueur suivant », « annuler ».</p><button id="voice" style="width:100%">🎙 ACTIVER LE MICRO</button><div id="voiceStatus" class="notice">Micro désactivé.</div><p class="tiny">La reconnaissance vocale nécessite une connexion sécurisée (HTTPS) et l'autorisation du micro. Le micro n'écoute que lorsque tu l'actives.</p></div>
 </section>
 </main>
 <footer>DARTS MANAGER · Sauvegarde locale sur cet appareil</footer>
@@ -90,30 +90,81 @@ let db=JSON.parse(localStorage.getItem('dartsManagerDB')||'null')||fresh();
 (db.players||[]).forEach(p=>{p.stats=p.stats||{};for(const k of ['matches','wins','visits','pointsScored','bestVisit','doublesHit','doublesTried','cricketWins','cricketPoints','lowVisits'])p.stats[k]=Number(p.stats[k]||0);p.lastAverage=Number(p.lastAverage||0);});
 if(db.current&&db.current.players)db.current.players.forEach(p=>{if(typeof p.lowVisits!=='number')p.lowVisits=0;if(typeof p.lowStreak!=='number')p.lowStreak=0;});
 let undoStack=[],timerId=null,recognition=null;
-document.addEventListener('click',()=>{if('speechSynthesis' in window && window.speechSynthesis.paused)window.speechSynthesis.resume()},{passive:true});
-// File vocale unique : une annonce complète par action, sans interruption ni doublon.
+// Synthèse vocale robuste pour Android/Chrome : une seule file, aucun cancel pendant une annonce normale.
 const speechQueue=[];
-let speechBusy=false, speechWatchdog=null;
-function playNextSpeech(){
- if(speechBusy || !speechQueue.length) return;
- if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
- const message=speechQueue.shift();
+let speechCurrent=null, speechWatchdog=null, speechReady=false, speechGeneration=0;
+function speechSupported(){return !!(window.speechSynthesis && window.SpeechSynthesisUtterance);}
+function setSpeechStatus(message){const el=$('speechStatus');if(el)el.textContent=message;}
+function initSpeech(){
+ if(!speechSupported()){setSpeechStatus('Synthèse vocale indisponible dans ce navigateur. Essaie avec Google Chrome.');return false;}
  try{
-  const utterance=new SpeechSynthesisUtterance(message.text);
-  utterance.lang='fr-FR'; utterance.rate=message.rate||1; utterance.pitch=message.pitch||1;
-  speechBusy=true;
-  const finish=()=>{if(!speechBusy)return;speechBusy=false;if(speechWatchdog)clearTimeout(speechWatchdog);speechWatchdog=null;playNextSpeech()};
-  utterance.onend=finish; utterance.onerror=finish;
-  // Secours Android : certains moteurs ne déclenchent pas toujours onend.
-  speechWatchdog=setTimeout(finish,Math.max(7000,message.text.length*115));
+  // getVoices() peut être vide au premier appel sur Android : ce n'est pas une erreur.
+  window.speechSynthesis.getVoices();
+  speechReady=true;
+  setSpeechStatus('Voix disponible. Appuie sur « Tester la voix ».');
+  return true;
+ }catch(error){console.warn('Initialisation voix',error);setSpeechStatus('Impossible d’accéder au moteur vocal Android.');return false;}
+}
+if(speechSupported()){
+ window.speechSynthesis.addEventListener?.('voiceschanged',()=>{speechReady=true;});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&speechCurrent){try{window.speechSynthesis.resume();}catch(error){console.warn(error);}}});
+}
+function clearSpeechWatchdog(){if(speechWatchdog){clearTimeout(speechWatchdog);speechWatchdog=null;}}
+function finishSpeech(token,reason){
+ if(!speechCurrent||speechCurrent!==token||token.finished)return;
+ token.finished=true;clearSpeechWatchdog();speechCurrent=null;
+ if(reason==='error')setSpeechStatus('Erreur du moteur vocal. Vérifie le volume multimédia et le moteur de synthèse vocale Android.');
+ // Laisse Android libérer le canal audio avant l'énoncé suivant.
+ setTimeout(()=>{if(!speechCurrent)playNextSpeech();},250);
+}
+function playNextSpeech(){
+ if(speechCurrent||!speechQueue.length)return;
+ if(!speechSupported()){setSpeechStatus('Synthèse vocale non prise en charge.');speechQueue.length=0;return;}
+ const message=speechQueue.shift();
+ const token={id:++speechGeneration,finished:false,started:false,utterance:null};
+ let utterance;
+ try{utterance=new window.SpeechSynthesisUtterance(message.text);}
+ catch(error){console.error('Création annonce vocale impossible',error);setSpeechStatus('Impossible de créer une annonce vocale.');setTimeout(playNextSpeech,300);return;}
+ token.utterance=utterance;speechCurrent=token;
+ utterance.lang='fr-FR';utterance.rate=message.rate||1;utterance.pitch=message.pitch||1;utterance.volume=1;
+ utterance.onstart=()=>{if(speechCurrent!==token)return;token.started=true;setSpeechStatus('Voix active.');};
+ utterance.onend=()=>finishSpeech(token,'end');
+ utterance.onerror=(event)=>{console.warn('Erreur synthèse vocale',event?.error||event);finishSpeech(token,'error');};
+ // Filet de sécurité uniquement si Android ne renvoie aucun événement. Pas de timer court.
+ speechWatchdog=setTimeout(()=>{
+  if(speechCurrent!==token)return;
+  console.warn('Annonce vocale bloquée, réinitialisation du moteur');
+  speechCurrent=null;token.finished=true;clearSpeechWatchdog();
+  try{window.speechSynthesis.cancel();}catch(error){console.warn(error);}
+  setSpeechStatus('Le moteur vocal a été relancé après un blocage.');
+  setTimeout(playNextSpeech,500);
+ },Math.max(45000,message.text.length*500));
+ try{
+  // Ne pas attendre voiceschanged : Android peut ne jamais l'émettre dans certaines PWA.
   window.speechSynthesis.speak(utterance);
- }catch(error){speechBusy=false;if(speechWatchdog)clearTimeout(speechWatchdog);speechWatchdog=null;console.warn('Synthèse vocale indisponible',error);playNextSpeech();}
+  try{window.speechSynthesis.resume();}catch(error){console.warn('Reprise moteur vocal',error);}
+ }catch(error){console.error('Lecture vocale impossible',error);finishSpeech(token,'error');}
 }
-function speak(message, options={}){
- if(!message || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+function speak(message,options={}){
+ if(!message||!speechSupported()){if(message)setSpeechStatus('Voix indisponible dans ce navigateur.');return false;}
  speechQueue.push({text:String(message),rate:options.rate||1,pitch:options.pitch||1});
- playNextSpeech();
+ playNextSpeech();return true;
 }
+function resetSpeechForTest(){
+ if(!speechSupported())return false;
+ // Le cancel est réservé au bouton de test explicite, jamais aux annonces du jeu.
+ speechGeneration++;clearSpeechWatchdog();speechQueue.length=0;
+ if(speechCurrent)speechCurrent.finished=true;
+ speechCurrent=null;
+ try{window.speechSynthesis.cancel();window.speechSynthesis.resume();}catch(error){console.warn(error);}
+ return true;
+}
+$('testSpeech').onclick=()=>{
+ if(!initSpeech()||!resetSpeechForTest())return;
+ setSpeechStatus('Test vocal en cours…');
+ setTimeout(()=>speak('La voix du coach fonctionne. On est parti !'),250);
+};
+initSpeech();
 function speakMissedDart(){
  speak('Ah ouais… magnifique ! La cible, c’était juste à côté, champion !',{rate:0.96,pitch:1.04});
 }
@@ -136,7 +187,7 @@ function active(){return db.current?.players[db.current.turn]}
 function tab(name){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==name));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name))}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('addPlayer').onclick=()=>{let n=$('playerName').value.trim();if(!n)return;if(db.players.length>=8)return alert('Maximum 8 joueurs.');if(db.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return alert('Ce joueur existe déjà.');db.players.push(player(n));$('playerName').value='';save()};
-$('newGame').onclick=()=>{if(!Array.isArray(db.players)||db.players.length===0)return alert('Ajoute au moins un joueur dans l’onglet Joueurs.');const game=$('game').value,start=Number($('startScore').value);const ids=db.players.slice(0,8);if(ids.length===0)return alert('Ajoute au moins un joueur dans l’onglet Joueurs.');db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],cricketDarts:0,cricketVisitPoints:0,cricketVisitHits:[],started:Date.now()};undoStack=[];resetDarts();save();$('matchNotice').textContent=ids.length===1?'Partie solo lancée. À toi de jouer !':'Partie lancée. Bonne partie !'};
+$('newGame').onclick=()=>{if(!Array.isArray(db.players)||db.players.length===0)return alert('Ajoute au moins un joueur dans l’onglet Joueurs.');const game=$('game').value,start=Number($('startScore').value);const ids=db.players.slice(0,8);if(ids.length===0)return alert('Ajoute au moins un joueur dans l’onglet Joueurs.');db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],cricketDarts:0,cricketVisitPoints:0,cricketVisitHits:[],started:Date.now()};undoStack=[];resetDarts();save();$('matchNotice').textContent=ids.length===1?'Partie solo lancée. À toi de jouer !':'Partie lancée. Bonne partie !';speak(ids.length===1?'Partie solo lancée. À toi de jouer !':'Partie lancée. Bonne partie !')} ;
 function nextTurn(){if(!db.current||!Array.isArray(db.current.players)||db.current.players.length===0)return;db.current.turn=(db.current.turn+1)%db.current.players.length}
 $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=Number($('visitScore').value);if(!Number.isInteger(n)||n<0||n>180)return alert('Entre un score entre 0 et 180.');let p=active(),before=p.score,after=before-n,wasStruggling=(p.lowStreak||0)>=2;
  const last=dartEntries[dartEntries.length-1],lastDouble=!!last&&(last.mult===2||last.number===50),lastMaster=!!last&&(last.mult===2||last.mult===3||last.number===50);
