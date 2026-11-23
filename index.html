@@ -32,7 +32,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:18px}
  <div><label>SORTIE</label><select id="outRule"><option value="straight">Simple out</option><option value="double" selected>Double out</option><option value="master">Master out</option></select></div>
 </div>
 <button class="primary" id="newGame" style="width:100%">NOUVELLE PARTIE</button>
-<div id="matchNotice" class="notice">Ajoute au moins deux joueurs dans l'onglet Joueurs, puis lance une partie.</div>
+<div id="matchNotice" class="notice">Ajoute au moins un joueur dans l'onglet Joueurs, puis lance une partie.</div>
 <div id="activeArea" class="hidden">
 <div class="muted">AU TOUR DE</div><div id="activeName" class="big green">—</div>
 <div id="score501">
@@ -102,18 +102,16 @@ function speak(message){
   window.speechSynthesis.speak(utterance);
  }catch(error){console.warn('Synthèse vocale indisponible',error);}
 }
-// Réplique sarcastique dédiée : plusieurs segments avec pauses et intonation accentuée.
+// Réplique en une seule phrase pour éviter l'effet robotique des segments enchaînés.
 function speakMissedDart(){
  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
  try{
   window.speechSynthesis.cancel();
-  const lines=[
-   {text:'Ooooh...',rate:0.82,pitch:1.35},
-   {text:'bravo champion !',rate:0.88,pitch:1.18},
-   {text:'Encore une flèche dans le vide !',rate:0.94,pitch:1.12},
-   {text:'C’est toi qui paies les flèches, hein !',rate:0.86,pitch:1.28}
-  ];
-  lines.forEach((line)=>{const u=new SpeechSynthesisUtterance(line.text);u.lang='fr-FR';u.rate=line.rate;u.pitch=line.pitch;window.speechSynthesis.speak(u);});
+  const utterance=new SpeechSynthesisUtterance('Oh là là… bravo, champion… encore une flèche dans le vide ! C’est toi qui paies les flèches, hein ?');
+  utterance.lang='fr-FR';
+  utterance.rate=0.92;
+  utterance.pitch=1.12;
+  window.speechSynthesis.speak(utterance);
  }catch(error){console.warn('Synthèse vocale indisponible',error);}
 }
 const save=()=>{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()};
@@ -124,7 +122,7 @@ function active(){return db.current?.players[db.current.turn]}
 function tab(name){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==name));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name))}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('addPlayer').onclick=()=>{let n=$('playerName').value.trim();if(!n)return;if(db.players.length>=8)return alert('Maximum 8 joueurs.');if(db.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return alert('Ce joueur existe déjà.');db.players.push(player(n));$('playerName').value='';save()};
-$('newGame').onclick=()=>{if(db.players.length<2)return alert('Ajoute au moins deux joueurs.');let ids=[...db.players],game=$('game').value,start=Number($('startScore').value);db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],cricketDarts:0,cricketVisitPoints:0,cricketVisitHits:[],started:Date.now()};undoStack=[];resetDarts();save()};
+$('newGame').onclick=()=>{if(db.players.length<1)return alert('Ajoute au moins un joueur dans l’onglet Joueurs.');let ids=[...db.players],game=$('game').value,start=Number($('startScore').value);db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],cricketDarts:0,cricketVisitPoints:0,cricketVisitHits:[],started:Date.now()};undoStack=[];resetDarts();save()};
 function nextTurn(){db.current.turn=(db.current.turn+1)%db.current.players.length}
 $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=Number($('visitScore').value);if(!Number.isInteger(n)||n<0||n>180)return alert('Entre un score entre 0 et 180.');let p=active(),before=p.score,after=before-n;
  const last=dartEntries[dartEntries.length-1],lastDouble=!!last&&(last.mult===2||last.number===50),lastMaster=!!last&&(last.mult===2||last.mult===3||last.number===50);
