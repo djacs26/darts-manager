@@ -90,29 +90,30 @@ let db=JSON.parse(localStorage.getItem('dartsManagerDB')||'null')||fresh();
 (db.players||[]).forEach(p=>{p.stats=p.stats||{};for(const k of ['matches','wins','visits','pointsScored','bestVisit','doublesHit','doublesTried','cricketWins','cricketPoints','lowVisits'])p.stats[k]=Number(p.stats[k]||0);p.lastAverage=Number(p.lastAverage||0);});
 if(db.current&&db.current.players)db.current.players.forEach(p=>{if(typeof p.lowVisits!=='number')p.lowVisits=0;if(typeof p.lowStreak!=='number')p.lowStreak=0;});
 let undoStack=[],timerId=null,recognition=null;
-// Annonces vocales : utilise la synthèse vocale du navigateur (si disponible).
-function speak(message){
+document.addEventListener('click',()=>{if('speechSynthesis' in window && window.speechSynthesis.paused)window.speechSynthesis.resume()},{passive:true});
+// File vocale unique : aucune annonce ne coupe la précédente.
+const speechQueue=[];
+let speechBusy=false;
+function playNextSpeech(){
+ if(speechBusy || !speechQueue.length) return;
  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+ const message=speechQueue.shift();
  try{
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(message);
-  utterance.lang='fr-FR';
-  utterance.rate=1;
-  utterance.pitch=1;
+  const utterance=new SpeechSynthesisUtterance(message.text);
+  utterance.lang='fr-FR'; utterance.rate=message.rate||1; utterance.pitch=message.pitch||1;
+  speechBusy=true;
+  const finish=()=>{speechBusy=false;playNextSpeech()};
+  utterance.onend=finish; utterance.onerror=finish;
   window.speechSynthesis.speak(utterance);
- }catch(error){console.warn('Synthèse vocale indisponible',error);}
+ }catch(error){speechBusy=false;console.warn('Synthèse vocale indisponible',error);playNextSpeech();}
 }
-// Réplique en une seule phrase pour éviter l'effet robotique des segments enchaînés.
+function speak(message, options={}){
+ if(!message || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+ speechQueue.push({text:String(message),rate:options.rate||1,pitch:options.pitch||1});
+ playNextSpeech();
+}
 function speakMissedDart(){
- if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
- try{
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance('Ah ouais… magnifique ! La cible, c’était juste à côté, champion !');
-  utterance.lang='fr-FR';
-  utterance.rate=0.96;
-  utterance.pitch=1.04;
-  window.speechSynthesis.speak(utterance);
- }catch(error){console.warn('Synthèse vocale indisponible',error);}
+ speak('Ah ouais… magnifique ! La cible, c’était juste à côté, champion !',{rate:0.96,pitch:1.04});
 }
 // Le mur compte zéro, mais possède ses propres répliques aléatoires.
 function speakWall(){
@@ -124,17 +125,6 @@ function speakWall(){
   "Eh ! On joue aux fléchettes, pas à la démolition !"
  ];
  speak(lines[Math.floor(Math.random()*lines.length)]);
-}
-// Chambre de temps en temps, selon les performances, sans interrompre les annonces spéciales.
-function coachReact(player, score, wasStruggling){
- if(!player) return;
- const low=["Oh là, on a perdu le bras ou quoi ?","Tu veux que je te rapproche la cible ?","Ça commence à sentir la catastrophe !"];
- const comeback=["Ah ! Enfin ! Il était temps !","Ah, le bras est revenu !","Voilà, tu vois quand tu veux !"];
- if(score<=25 && player.lowStreak>=2 && Math.random()<0.35){
-  setTimeout(()=>speak(low[Math.floor(Math.random()*low.length)]),2600);
- }else if(wasStruggling && score>=60 && Math.random()<0.45){
-  setTimeout(()=>speak(comeback[Math.floor(Math.random()*comeback.length)]),2600);
- }
 }
 const save=()=>{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()};
 function effect(message){const el=document.createElement('div');el.className='winfx';el.innerHTML='<strong>'+esc(message)+'</strong>';document.body.appendChild(el);setTimeout(()=>el.remove(),2400)}
