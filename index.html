@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="application-version" content="4.5.0"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
+<meta name="application-version" content="4.5.1"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg">
 <title>DARTS MANAGER</title>
 <style>
@@ -27,7 +27,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 @media(min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
 </style></head>
 <body>
-<header><h1>DARTS <span>MANAGER</span></h1><span class="tag">ACIER · 25 G · v4.5.0</span></header>
+<header><h1>DARTS <span>MANAGER</span></h1><span class="tag">ACIER · 25 G · v4.5.1</span></header>
 <nav><button class="tab active" data-tab="match">PARTIE</button><button class="tab" data-tab="players">JOUEURS</button><button class="tab" data-tab="stats">STATS</button><button class="tab" data-tab="coach">COACH</button><button class="tab" data-tab="settings">RÉGLAGES</button></nav>
 <main>
 <section id="match">
@@ -66,7 +66,7 @@ function normalizeDB(raw){
 let db;try{db=normalizeDB(JSON.parse(localStorage.getItem('dartsManagerDB')))}catch{db=fresh()}
 let mult=1,darts=[],coachInterval=null,recognition=null,turnSnapshots=[],voiceVisit=false;
 function save(){try{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()}catch(e){console.error(e);toast('Erreur de sauvegarde : mémoire du navigateur indisponible.')}}
-function say(t,important=false){if(!('speechSynthesis'in window)||db.settings.voiceMode==='off'||(db.settings.voiceMode==='important'&&!important))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=Number(db.settings.voiceRate||1);speechSynthesis.speak(u)}
+function say(t,important=false){if(db.settings.voiceMode==='off'||(db.settings.voiceMode==='important'&&!important))return false;if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){if($('voiceStatus'))$('voiceStatus').textContent='Voix de lecture indisponible dans ce navigateur. Essaie Google Chrome.';return false;}try{const synth=window.speechSynthesis;synth.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=Number(db.settings.voiceRate||1);u.onerror=e=>{if($('voiceStatus'))$('voiceStatus').textContent='Erreur de lecture vocale : '+(e.error||'inconnue');};synth.speak(u);if(typeof synth.resume==='function')synth.resume();return true;}catch(e){if($('voiceStatus'))$('voiceStatus').textContent='Impossible de lire la voix : '+e.message;return false;}}
 function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
 function effect(type,title,subtitle=''){
  const layer=$('fxLayer');layer.innerHTML='';const wrap=document.createElement('div');wrap.className='fx-overlay '+(type==='180'?'fx-180':type==='triple'?'fx-triple':type==='double'?'fx-double':'');
@@ -92,7 +92,7 @@ $('newGame').onclick=()=>{
   let first=$('starter').value; if(!db.players.some(p=>p.id===first))first=db.players[0].id;
   const list=[...db.players].sort((a,b)=>a.id===first?-1:b.id===first?1:0);
   db.current={game:$('game').value==='cricket'?'cricket':'501',players:list.map(p=>({id:p.id,name:p.name,score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,turnDarts:0,case25:0,lowRun:0,sixDartAdvice:0})),turn:0,log:[],started:Date.now()};
-  darts=[];turnSnapshots=[];save();tab('match');$('matchNotice').textContent='Partie lancée. '+list[0].name+' commence.';say('Nouvelle partie. '+list[0].name+', à toi de jouer.',true);$('gameArea').scrollIntoView({behavior:'smooth',block:'start'});
+  darts=[];turnSnapshots=[];save();tab('match');$('matchNotice').textContent='Partie lancée. '+list[0].name+' commence.';$('turnMessage').textContent='À toi de jouer, '+list[0].name+' !';say('Nouvelle partie. '+list[0].name+', à toi de jouer.',true);$('gameArea').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(e){console.error(e);toast('Impossible de lancer la partie : '+e.message)}
 };
 function active(){return db.current?.players[db.current.turn]}
@@ -117,7 +117,7 @@ document.querySelectorAll('[data-mult]').forEach(b=>b.onclick=()=>{mult=Number(b
 const keypad=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'25','BULL','0','EFFACER'];$('keypad').innerHTML=keypad.map(n=>`<button type="button" class="${['25','BULL','0','EFFACER'].includes(String(n))?'special':''}" data-key="${n}">${n==='0'?'0 · MANQUÉ':n}</button>`).join('');
 $('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){if(mult===3){toast('Le bull ne peut pas être triple.');return}pushDart(mult===2?50:25,mult===2?'DBull':'Bull25');return}if(k==='0'){pushDart(0,'0');return}let n=Number(k);if(n===25&&mult===3){toast('Le bull ne peut pas être triple.');return}let v=n===25?(mult===2?50:25):n*mult;pushDart(v,n===25?(mult===2?'DBull':'Bull25'):(mult===1?'S':mult===2?'D':'T')+n)};
 $('undoDart').onclick=()=>{darts.pop();renderMatch()};
-function next(){let m=db.current;m.turn=(m.turn+1)%m.players.length;darts=[];renderMatch()}
+function next(){let m=db.current;m.turn=(m.turn+1)%m.players.length;darts=[];renderMatch();$('turnMessage').textContent='À toi de jouer, '+active().name+' !';}
 function validate501(){
  let m=db.current;if(!m||m.game!=='501')return;
  if(!darts.length)return toast('Saisis au moins une fléchette.');
@@ -149,10 +149,10 @@ function validate501(){
    effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');
    if(p.lowRun>=3){
     p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;
-    say('T’as une case pour ça !',true);
+    say("T'as une case pour ça !",true);
     setTimeout(()=>say('Ah, on va passer à la règle des 6 flèches !',true),1900);
     effect('six','RÈGLE DES 6 FLÈCHES !','Trois volées de 25 points ou moins');
-   }else say('T’as une case pour ça !',true);
+   }else say("T'as une case pour ça !",true);
   }else if(sum===26){p.lowRun=0;effect('26','26, LA DRÔME !','');say('26, la Drôme !',true);}
   else {p.lowRun=0;if(!bust&&sum===180){say('Cent quatre-vingts ! Magnifique !',true);effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();}}
  }
@@ -238,7 +238,7 @@ function startVoiceRecognition(){
  }catch(e){recognition=null;$('voiceStatus').textContent='Impossible de démarrer le micro : '+e.message;voiceEnabled=false;}
 }
 $('voiceBtn').onclick=()=>{if(voiceEnabled){voiceEnabled=false;if(recognition){recognition.onend=null;recognition.stop();recognition=null;}$('voiceStatus').textContent='Micro désactivé.';return;}voiceEnabled=true;startVoiceRecognition();};
-$('voiceMode').onchange=()=>{db.settings.voiceMode=$('voiceMode').value;save()};$('voiceRate').oninput=()=>{db.settings.voiceRate=Number($('voiceRate').value);save()};$('testVoice').onclick=()=>say('Darts Manager est prêt. Bonne partie et vise juste !',true);
+$('voiceMode').onchange=()=>{db.settings.voiceMode=$('voiceMode').value;save()};$('voiceRate').oninput=()=>{db.settings.voiceRate=Number($('voiceRate').value);save()};$('testVoice').onclick=()=>{const ok=say('Darts Manager est prêt. Bonne partie et vise juste !',true);if(ok)toast('Annonce vocale envoyée.');else if(db.settings.voiceMode==='off')toast('Active les annonces vocales dans les réglages.');};
 $('clearData').onclick=()=>{if(confirm('Effacer tous les joueurs, scores et historiques ?')){db=fresh();save();toast('Données effacées.')}};
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('Service worker:',err)));
 $('voiceMode').value=db.settings.voiceMode||'all';$('voiceRate').value=db.settings.voiceRate||1;renderAll();renderPlan();updateTimer();
