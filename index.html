@@ -91,9 +91,9 @@ let db=JSON.parse(localStorage.getItem('dartsManagerDB')||'null')||fresh();
 if(db.current&&db.current.players)db.current.players.forEach(p=>{if(typeof p.lowVisits!=='number')p.lowVisits=0;if(typeof p.lowStreak!=='number')p.lowStreak=0;});
 let undoStack=[],timerId=null,recognition=null;
 document.addEventListener('click',()=>{if('speechSynthesis' in window && window.speechSynthesis.paused)window.speechSynthesis.resume()},{passive:true});
-// File vocale unique : aucune annonce ne coupe la précédente.
+// File vocale unique : une annonce complète par action, sans interruption ni doublon.
 const speechQueue=[];
-let speechBusy=false;
+let speechBusy=false, speechWatchdog=null;
 function playNextSpeech(){
  if(speechBusy || !speechQueue.length) return;
  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
@@ -102,10 +102,12 @@ function playNextSpeech(){
   const utterance=new SpeechSynthesisUtterance(message.text);
   utterance.lang='fr-FR'; utterance.rate=message.rate||1; utterance.pitch=message.pitch||1;
   speechBusy=true;
-  const finish=()=>{speechBusy=false;playNextSpeech()};
+  const finish=()=>{if(!speechBusy)return;speechBusy=false;if(speechWatchdog)clearTimeout(speechWatchdog);speechWatchdog=null;playNextSpeech()};
   utterance.onend=finish; utterance.onerror=finish;
+  // Secours Android : certains moteurs ne déclenchent pas toujours onend.
+  speechWatchdog=setTimeout(finish,Math.max(7000,message.text.length*115));
   window.speechSynthesis.speak(utterance);
- }catch(error){speechBusy=false;console.warn('Synthèse vocale indisponible',error);playNextSpeech();}
+ }catch(error){speechBusy=false;if(speechWatchdog)clearTimeout(speechWatchdog);speechWatchdog=null;console.warn('Synthèse vocale indisponible',error);playNextSpeech();}
 }
 function speak(message, options={}){
  if(!message || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
@@ -157,10 +159,14 @@ $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=
  if(!qualifiesIn){p.started=false;m.log.push({player:p.name,score:n,detail:'Pas de double d’entrée',before});nextTurn();$('matchNotice').textContent=p.name+' : double d’entrée requis, score non compté.';announcement=`Double d’entrée manqué : les ${n} points ne comptent pas. Score inchangé : ${before}.`;}
  else if(bust){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';announcement=`Bust ! ${n} points tentés. Ton score reste à ${before} points.`;}
  else{p.started=true;p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';announcement=(n===26?'':`Tu marques ${n} points. `)+`Il te reste ${after} points.`;}
+ const wallDart=dartEntries.some(d=>d.kind==='wall');
+ const missedDart=dartEntries.some(d=>d.kind==='miss');
  if(specialCall)announcement=specialCall+' '+announcement;
+ if(wallDart){const wallLines=["Oh ! C'est toi qui payes les fléchettes, hein !","Ah ben là, le mur a pris plus cher que la cible !","La cible, c'était deux mètres à gauche, champion !","Attention, le mur va finir par porter plainte !","Eh ! On joue aux fléchettes, pas à la démolition !"];announcement+=' '+wallLines[Math.floor(Math.random()*wallLines.length)];}
+ else if(missedDart)announcement+=' Ah ouais… magnifique ! La cible, c’était juste à côté, champion !';
  if(coachCall)announcement+=' '+coachCall;
  if(sixDartsCall)announcement+=' '+sixDartsCall;
- delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();if(announcement)setTimeout(()=>speak(announcement),1900)};
+ delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();if(announcement)speak(announcement)};
 $('visitScore').addEventListener('input',()=>delete $('visitScore').dataset.double);
 $('visitScore').addEventListener('change',()=>{});
 $('undo501').onclick=()=>{if(!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
@@ -176,8 +182,8 @@ function refreshDarts(){
 }
 $('dartMultipliers').onclick=e=>{let b=e.target.closest('[data-mult]');if(!b)return;dartMultiplier=Number(b.dataset.mult);refreshDarts()};
 $('dartNumbers').onclick=e=>{let b=e.target.closest('[data-number]');if(!b||dartEntries.length>=3)return;let n=Number(b.dataset.number),mult=n===25||n===50?1:dartMultiplier,points=n===50?50:n===25?25:n*mult;let label=n===50?'50':n===25?'25':(mult===1?'S':mult===2?'D':'T')+n;dartEntries.push({number:n,mult,points,label});refreshDarts()};
-$('dartMiss').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'0'});speakMissedDart();refreshDarts()}};
-$('dartWall').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'MUR',kind:'wall'});speakWall();refreshDarts()}};
+$('dartMiss').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'0',kind:'miss'});refreshDarts()}};
+$('dartWall').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'MUR',kind:'wall'});refreshDarts()}};
 $('dartUndo').onclick=()=>{dartEntries.pop();refreshDarts()};
 function resetDarts(){dartEntries=[];dartMultiplier=1;refreshDarts()}
 refreshDarts();
