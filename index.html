@@ -138,7 +138,7 @@ function playNextSpeech(){
   try{window.speechSynthesis.cancel();}catch(error){console.warn(error);}
   setSpeechStatus('Le moteur vocal a été relancé après un blocage.');
   setTimeout(playNextSpeech,500);
- },Math.max(45000,message.text.length*500));
+ },Math.max(9000, message.text.length*220 + 3500));
  try{
   // Ne pas attendre voiceschanged : Android peut ne jamais l'émettre dans certaines PWA.
   window.speechSynthesis.speak(utterance);
@@ -148,6 +148,7 @@ function playNextSpeech(){
 function speak(message,options={}){
  if(!message||!speechSupported()){if(message)setSpeechStatus('Voix indisponible dans ce navigateur.');return false;}
  speechQueue.push({text:String(message),rate:options.rate||1,pitch:options.pitch||1});
+ setSpeechStatus('Annonce envoyée ('+speechQueue.length+(speechQueue.length>1?' en attente':' en cours')+').');
  playNextSpeech();return true;
 }
 function resetSpeechForTest(){
@@ -217,7 +218,11 @@ $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=
  else if(missedDart)announcement+=' Ah ouais… magnifique ! La cible, c’était juste à côté, champion !';
  if(coachCall)announcement+=' '+coachCall;
  if(sixDartsCall)announcement+=' '+sixDartsCall;
- delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();if(announcement)speak(announcement)};
+ delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();
+ if(!announcement)announcement=`Volée de ${n} points. Il te reste ${p.score} points.`;
+ // L'annonce est déclenchée une seule fois, directement depuis le clic de validation.
+ speak(announcement,{rate:0.98,pitch:1});
+ };
 $('visitScore').addEventListener('input',()=>delete $('visitScore').dataset.double);
 $('visitScore').addEventListener('change',()=>{});
 $('undo501').onclick=()=>{if(!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
