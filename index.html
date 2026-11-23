@@ -102,6 +102,20 @@ function speak(message){
   window.speechSynthesis.speak(utterance);
  }catch(error){console.warn('Synthèse vocale indisponible',error);}
 }
+// Réplique sarcastique dédiée : plusieurs segments avec pauses et intonation accentuée.
+function speakMissedDart(){
+ if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+ try{
+  window.speechSynthesis.cancel();
+  const lines=[
+   {text:'Ooooh...',rate:0.82,pitch:1.35},
+   {text:'bravo champion !',rate:0.88,pitch:1.18},
+   {text:'Encore une flèche dans le vide !',rate:0.94,pitch:1.12},
+   {text:'C’est toi qui paies les flèches, hein !',rate:0.86,pitch:1.28}
+  ];
+  lines.forEach((line)=>{const u=new SpeechSynthesisUtterance(line.text);u.lang='fr-FR';u.rate=line.rate;u.pitch=line.pitch;window.speechSynthesis.speak(u);});
+ }catch(error){console.warn('Synthèse vocale indisponible',error);}
+}
 const save=()=>{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()};
 function effect(message){const el=document.createElement('div');el.className='winfx';el.innerHTML='<strong>'+esc(message)+'</strong>';document.body.appendChild(el);setTimeout(()=>el.remove(),2400)}
 const targets=['20','19','18','17','16','15','Bull'];
@@ -110,7 +124,7 @@ function active(){return db.current?.players[db.current.turn]}
 function tab(name){document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==name));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name))}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('addPlayer').onclick=()=>{let n=$('playerName').value.trim();if(!n)return;if(db.players.length>=8)return alert('Maximum 8 joueurs.');if(db.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return alert('Ce joueur existe déjà.');db.players.push(player(n));$('playerName').value='';save()};
-$('newGame').onclick=()=>{if(db.players.length<2)return alert('Ajoute au moins deux joueurs.');let ids=[...db.players],game=$('game').value,start=Number($('startScore').value);db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],started:Date.now()};undoStack=[];resetDarts();save()};
+$('newGame').onclick=()=>{if(db.players.length<2)return alert('Ajoute au moins deux joueurs.');let ids=[...db.players],game=$('game').value,start=Number($('startScore').value);db.current={game,startScore:start,inRule:$('inRule').value,outRule:$('outRule').value,players:ids.map(p=>({id:p.id,name:p.name,score:start,started:game==='501'&&$('inRule').value==='straight',marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,legs:0,visits:0,total:0,best:0,lowVisits:0,lowStreak:0,doublesTried:0,doublesHit:0})),turn:0,log:[],cricketDarts:0,cricketVisitPoints:0,cricketVisitHits:[],started:Date.now()};undoStack=[];resetDarts();save()};
 function nextTurn(){db.current.turn=(db.current.turn+1)%db.current.players.length}
 $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=Number($('visitScore').value);if(!Number.isInteger(n)||n<0||n>180)return alert('Entre un score entre 0 et 180.');let p=active(),before=p.score,after=before-n;
  const last=dartEntries[dartEntries.length-1],lastDouble=!!last&&(last.mult===2||last.number===50),lastMaster=!!last&&(last.mult===2||last.mult===3||last.number===50);
@@ -123,10 +137,11 @@ $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=
  if(p.lowStreak===3){setTimeout(()=>speak("Ah, on va passer à la règle des 6 flèches !"),900);p.lowStreak=0;}
  let validOut=m.outRule==='straight'||(m.outRule==='double'&&lastDouble)||(m.outRule==='master'&&lastMaster);
  let bust=after<0||after===1||(after===0&&!validOut);
- if(!qualifiesIn){p.started=false;m.log.push({player:p.name,score:n,detail:'Pas de double d’entrée',before});nextTurn();$('matchNotice').textContent=p.name+' : double d’entrée requis, score non compté.';}
- else if(bust){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';}
- else{p.started=true;p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';}
- delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save()};
+ let announcement='';
+ if(!qualifiesIn){p.started=false;m.log.push({player:p.name,score:n,detail:'Pas de double d’entrée',before});nextTurn();$('matchNotice').textContent=p.name+' : double d’entrée requis, score non compté.';announcement=`${n} points saisis, mais double d’entrée manqué. Score inchangé : ${before}.`;}
+ else if(bust){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';announcement=`Bust ! ${n} points tentés. Il te reste ${before} points.`;}
+ else{p.started=true;p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';announcement=`${n} points. Il te reste ${after} points.`;}
+ delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();if(announcement)setTimeout(()=>speak(announcement),1900)};
 $('visitScore').addEventListener('input',()=>delete $('visitScore').dataset.double);
 $('visitScore').addEventListener('change',()=>{});
 $('undo501').onclick=()=>{if(!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
@@ -142,30 +157,32 @@ function refreshDarts(){
 }
 $('dartMultipliers').onclick=e=>{let b=e.target.closest('[data-mult]');if(!b)return;dartMultiplier=Number(b.dataset.mult);refreshDarts()};
 $('dartNumbers').onclick=e=>{let b=e.target.closest('[data-number]');if(!b||dartEntries.length>=3)return;let n=Number(b.dataset.number),mult=n===25||n===50?1:dartMultiplier,points=n===50?50:n===25?25:n*mult;let label=n===50?'50':n===25?'25':(mult===1?'S':mult===2?'D':'T')+n;dartEntries.push({number:n,mult,points,label});refreshDarts()};
-$('dartMiss').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'0'});speak("Oh, c'est toi qui payes les flèches !");refreshDarts()}};
+$('dartMiss').onclick=()=>{if(dartEntries.length<3){dartEntries.push({number:0,mult:1,points:0,label:'0'});speakMissedDart();refreshDarts()}};
 $('dartUndo').onclick=()=>{dartEntries.pop();refreshDarts()};
 function resetDarts(){dartEntries=[];dartMultiplier=1;refreshDarts()}
 refreshDarts();
 function renderCricketQuick(){
  const m=db.current;if(!m||m.game!=='cricket')return;
  $('cricketQuick').innerHTML=targets.map(t=>{
-  const current=active(),closed=current.marks[t]>=3;
+  const current=active(),closed=current.marks[t]>=3,turnFull=(m.cricketDarts||0)>=3;
   return `<div class="cricket-row"><b>${t}</b>
-   <button data-ct="${t}" data-hit="1" ${closed?'disabled':''}>SIMPLE</button>
-   <button data-ct="${t}" data-hit="2" ${closed?'disabled':''}>DOUBLE</button>
-   <button data-ct="${t}" data-hit="3" ${closed?'disabled':''}>TRIPLE</button>
+   <button data-ct="${t}" data-hit="1" ${closed||turnFull?'disabled':''}>SIMPLE</button>
+   <button data-ct="${t}" data-hit="2" ${closed||turnFull?'disabled':''}>DOUBLE</button>
+   <button data-ct="${t}" data-hit="3" ${closed||turnFull?'disabled':''}>TRIPLE</button>
   </div>`;
  }).join('');
 }
 function applyCricketHit(t,h){
  const m=db.current;if(!m||m.game!=='cricket')return;
  const p=active(),old=p.marks[t],v=t==='Bull'?25:Number(t),opponentsOpen=m.players.some(x=>x.id!==p.id&&x.marks[t]<3);
+ if((m.cricketDarts||0)>=3){$('matchNotice').textContent='Tes 3 fléchettes sont jouées : passe au joueur suivant.';return;}
  undoStack.push(JSON.stringify(m));
- const extra=Math.max(0,old+h-3),newMarks=Math.min(3,old+h);
+ const extra=Math.max(0,old+h-3),newMarks=Math.min(3,old+h),added=opponentsOpen?extra*v:0;
  p.marks[t]=newMarks;
- if(opponentsOpen&&extra>0)p.points+=extra*v;
- p.visits++;
- m.log.push({player:p.name,target:t,hits:h,pointsAdded:opponentsOpen?extra*v:0});
+ if(added)p.points+=added;
+ m.cricketDarts=(m.cricketDarts||0)+1;m.cricketVisitPoints=(m.cricketVisitPoints||0)+added;
+ m.cricketVisitHits=m.cricketVisitHits||[];m.cricketVisitHits.push(`${h===1?'simple':h===2?'double':'triple'} ${t}`);
+ m.log.push({player:p.name,target:t,hits:h,pointsAdded:added});
  const closed=targets.every(k=>p.marks[k]>=3);
  const maxOpp=Math.max(0,...m.players.filter(x=>x.id!==p.id).map(x=>x.points));
  if(closed&&p.points>=maxOpp){finishMatch(p.id);return;}
@@ -174,7 +191,7 @@ function applyCricketHit(t,h){
 }
 $('cricketQuick').onclick=e=>{const b=e.target.closest('[data-ct]');if(!b)return;applyCricketHit(b.dataset.ct,Number(b.dataset.hit));};
 $('undoCricket').onclick=()=>{if(!undoStack.length)return;db.current=JSON.parse(undoStack.pop());save()};
-$('nextCricket').onclick=()=>{if(!db.current||db.current.game!=='cricket')return;undoStack.push(JSON.stringify(db.current));nextTurn();$('matchNotice').textContent='Au tour de '+active().name+'.';save()};
+$('nextCricket').onclick=()=>{if(!db.current||db.current.game!=='cricket')return;let m=db.current,p=active(),count=m.cricketDarts||0,pts=m.cricketVisitPoints||0;undoStack.push(JSON.stringify(m));p.visits++;let call=count===0?'Aucune fléchette enregistrée.':`${count} fléchette${count>1?'s':''} jouée${count>1?'s':''}. ${pts} point${pts>1?'s':''} marqué${pts>1?'s':''} au Cricket.`;nextTurn();m.cricketDarts=0;m.cricketVisitPoints=0;m.cricketVisitHits=[];$('matchNotice').textContent=call+' Au tour de '+active().name+'.';save();speak(call)};
 function finishMatch(winnerId){let m=db.current,w=m.players.find(p=>p.id===winnerId);db.players.forEach(profile=>{let p=m.players.find(x=>x.id===profile.id);if(!p)return;profile.stats.matches++;if(profile.id===winnerId){profile.stats.wins++;if(m.game==='cricket')profile.stats.cricketWins++;}if(m.game==='501'){profile.stats.visits+=p.visits;profile.stats.pointsScored+=p.total;profile.stats.bestVisit=Math.max(profile.stats.bestVisit,p.best);profile.stats.lowVisits=(profile.stats.lowVisits||0)+(p.lowVisits||0);profile.stats.doublesTried=(profile.stats.doublesTried||0)+(p.doublesTried||0);profile.stats.doublesHit=(profile.stats.doublesHit||0)+(p.doublesHit||0);profile.lastAverage=p.visits?p.total/p.visits:0;}else profile.stats.cricketPoints+=p.points;});db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:m.game,winner:w.name,log:m.log});db.history=db.history.slice(0,100);db.current=null;$('matchNotice').textContent='Victoire de '+w.name+' ! Partie enregistrée.';effect('VICTOIRE : '+w.name+' !');speak('Victoire de '+w.name+' !');save()}
 $('finish').onclick=()=>{if(!db.current)return;if(confirm('Terminer et enregistrer cette partie sans vainqueur ?')){db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:db.current.game,winner:'Partie interrompue',log:db.current.log});db.current=null;save()}};
 function renderAll(){renderPlayers();renderMatch();renderStats();$('trainingSteps').innerHTML=['Échauffement libre – 10 min','Précision sur le 20 – 15 min','Triples 20, 19 et 18 – 15 min','Doubles D20, D16, D10, D8 – 15 min','Sorties 40, 32, 60, 80 – 10 min','Partie de 501 – 10 min'].map(x=>`<div class="notice">${x}</div>`).join('')}
