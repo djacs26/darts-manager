@@ -152,17 +152,24 @@ $('submit501').onclick=()=>{let m=db.current;if(!m||m.game!=='501')return;let n=
  if(dartEntries.length){p.doublesTried=(p.doublesTried||0)+dartEntries.filter(d=>d.mult===2||d.number===50).length;p.doublesHit=(p.doublesHit||0)+dartEntries.filter(d=>d.mult===2||d.number===50).length;}
  if(n===180)effect('180 !');else if(dartEntries.some(d=>d.mult===3))effect('TRIPLE !');else if(dartEntries.some(d=>d.mult===2||d.number===50))effect('DOUBLE !');undoStack.push(JSON.stringify(m));p.visits++;
  if(n<=25){p.lowVisits=(p.lowVisits||0)+1;p.lowStreak=(p.lowStreak||0)+1;}else p.lowStreak=0;
- if(dartEntries.length===3 && dartEntries.every(d=>d.number===20 && d.mult===1))speak('Oh la grosse beuteuh ! C’est la team grosse beuteuh !');
- else if(n===26)speak('26, la Drôme !');
- else if(n<=25)speak("T'as une case pour ça !");
- coachReact(p,n,wasStruggling);
- if(p.lowStreak===3){setTimeout(()=>speak("Ah, on va passer à la règle des 6 flèches !"),900);p.lowStreak=0;}
+ let specialCall='';
+ if(dartEntries.length===3 && dartEntries.every(d=>d.number===20 && d.mult===1))specialCall='Oh la grosse beuteuh ! C’est la team grosse beuteuh !';
+ else if(n===26)specialCall='26, la Drôme !';
+ else if(n<=25)specialCall="T'as une case pour ça !";
+ let coachCall='';
+ if(n<=25 && p.lowStreak>=2 && Math.random()<0.35){const lines=["Oh là, on a perdu le bras ou quoi ?","Tu veux que je te rapproche la cible ?","Ça commence à sentir la catastrophe !"];coachCall=lines[Math.floor(Math.random()*lines.length)];}
+ else if(wasStruggling && n>=60 && Math.random()<0.45){const lines=["Ah ! Enfin ! Il était temps !","Ah, le bras est revenu !","Voilà, tu vois quand tu veux !"];coachCall=lines[Math.floor(Math.random()*lines.length)];}
+ let sixDartsCall='';
+ if(p.lowStreak===3){sixDartsCall="Ah, on va passer à la règle des 6 flèches !";p.lowStreak=0;}
  let validOut=m.outRule==='straight'||(m.outRule==='double'&&lastDouble)||(m.outRule==='master'&&lastMaster);
  let bust=after<0||after===1||(after===0&&!validOut);
  let announcement='';
- if(!qualifiesIn){p.started=false;m.log.push({player:p.name,score:n,detail:'Pas de double d’entrée',before});nextTurn();$('matchNotice').textContent=p.name+' : double d’entrée requis, score non compté.';announcement=`${n} points saisis, mais double d’entrée manqué. Score inchangé : ${before}.`;}
- else if(bust){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';announcement=`Bust ! ${n} points tentés. Il te reste ${before} points.`;}
- else{p.started=true;p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';announcement=`${n} points. Il te reste ${after} points.`;}
+ if(!qualifiesIn){p.started=false;m.log.push({player:p.name,score:n,detail:'Pas de double d’entrée',before});nextTurn();$('matchNotice').textContent=p.name+' : double d’entrée requis, score non compté.';announcement=`Double d’entrée manqué : les ${n} points ne comptent pas. Score inchangé : ${before}.`;}
+ else if(bust){m.log.push({player:p.name,score:'BUST',before});nextTurn();$('matchNotice').textContent=p.name+' : bust, score inchangé.';announcement=`Bust ! ${n} points tentés. Ton score reste à ${before} points.`;}
+ else{p.started=true;p.score=after;p.total+=n;p.best=Math.max(p.best,n);m.log.push({player:p.name,score:n,before,after});if(after===0){finishMatch(p.id);return;}nextTurn();$('matchNotice').textContent=p.name+' marque '+n+' points.';announcement=(n===26?'':`Tu marques ${n} points. `)+`Il te reste ${after} points.`;}
+ if(specialCall)announcement=specialCall+' '+announcement;
+ if(coachCall)announcement+=' '+coachCall;
+ if(sixDartsCall)announcement+=' '+sixDartsCall;
  delete $('visitScore').dataset.double;$('visitScore').value='';resetDarts();save();if(announcement)setTimeout(()=>speak(announcement),1900)};
 $('visitScore').addEventListener('input',()=>delete $('visitScore').dataset.double);
 $('visitScore').addEventListener('change',()=>{});
