@@ -1,6 +1,9 @@
-DARTS MANAGER 4.5.1
-1. Décompresser l’archive.
-2. Envoyer tous les fichiers à la racine du dépôt GitHub, branche main.
-3. Remplacer les fichiers existants et valider Commit changes.
-4. Ouvrir https://djacs26.github.io/darts-manager/?v=451
-5. Pour la voix, autoriser le micro et utiliser Google Chrome si le navigateur actuel ne prend pas en charge SpeechRecognition.
+DARTS MANAGER – Cricket et options 501
+
+1. Décompresser cette archive.
+2. Sur GitHub, ouvrir le dépôt darts-manager puis Add file > Upload files.
+3. Envoyer les 8 fichiers à la racine du dépôt (pas le dossier qui les contient).
+4. Remplacer les fichiers existants, puis valider Commit changes.
+5. Après le déploiement GitHub Pages, ouvrir https://djacs26.github.io/darts-manager/?v=451-cricket501
+
+Par précaution, exporter les profils et statistiques depuis l’application avant la mise à jour.

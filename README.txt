@@ -1,3 +1,3 @@
-DARTS MANAGER 4.5.1
-Application de fléchettes acier 25 g.
-Déployer les 8 fichiers à la racine du dépôt GitHub Pages.
+DARTS MANAGER – correctif Cricket et options 501
+
+Archive de déploiement GitHub Pages contenant les 8 fichiers : application, manifeste, service worker, icônes et notices.
