@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="application-version" content="4.4.1"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
+<meta name="application-version" content="4.5.0"><meta name="theme-color" content="#08120d"><meta name="description" content="Darts Manager — 501, Cricket, statistiques et coach vocal">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg">
 <title>DARTS MANAGER</title>
 <style>
@@ -27,7 +27,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}
 @media(min-width:700px){.statgrid{grid-template-columns:repeat(4,1fr)}}
 </style></head>
 <body>
-<header><h1>DARTS <span>MANAGER</span></h1><span class="tag">ACIER · 25 G · v4.4.1</span></header>
+<header><h1>DARTS <span>MANAGER</span></h1><span class="tag">ACIER · 25 G · v4.5.0</span></header>
 <nav><button class="tab active" data-tab="match">PARTIE</button><button class="tab" data-tab="players">JOUEURS</button><button class="tab" data-tab="stats">STATS</button><button class="tab" data-tab="coach">COACH</button><button class="tab" data-tab="settings">RÉGLAGES</button></nav>
 <main>
 <section id="match">
@@ -56,6 +56,7 @@ function normalizeDB(raw){
  d.players=Array.isArray(d.players)?d.players:[]; d.history=Array.isArray(d.history)?d.history:[];
  d.settings={voiceMode:'all',voiceRate:1,...(d.settings||{})};
  d.players=d.players.filter(p=>p&&typeof p.name==='string').map(p=>({id:p.id||('p-'+Math.random().toString(36).slice(2)),name:p.name,stats:{matches:0,wins:0,visits:0,pointsScored:0,bestVisit:0,average:0,cricketWins:0,cricketPoints:0,doublesHit:0,case25:0,sixDartAdvice:0,...(p.stats||{})}}));
+ d.training={seconds:4500,...(d.training||{})};
  if(d.current&&Array.isArray(d.current.players)){
   d.current.turn=Math.max(0,Math.min(Number(d.current.turn)||0,d.current.players.length-1));
   d.current.players=d.current.players.map(p=>({score:501,marks:Object.fromEntries(targets.map(t=>[t,0])),points:0,visits:0,total:0,best:0,case25:0,lowRun:0,sixDartAdvice:0,...p,marks:{...Object.fromEntries(targets.map(t=>[t,0])),...(p.marks||{})}}));
@@ -63,7 +64,7 @@ function normalizeDB(raw){
  return d;
 }
 let db;try{db=normalizeDB(JSON.parse(localStorage.getItem('dartsManagerDB')))}catch{db=fresh()}
-let mult=1,darts=[],coachInterval=null,recognition=null,turnSnapshots=[];
+let mult=1,darts=[],coachInterval=null,recognition=null,turnSnapshots=[],voiceVisit=false;
 function save(){try{localStorage.setItem('dartsManagerDB',JSON.stringify(db));renderAll()}catch(e){console.error(e);toast('Erreur de sauvegarde : mémoire du navigateur indisponible.')}}
 function say(t,important=false){if(!('speechSynthesis'in window)||db.settings.voiceMode==='off'||(db.settings.voiceMode==='important'&&!important))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=Number(db.settings.voiceRate||1);speechSynthesis.speak(u)}
 function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
@@ -114,9 +115,9 @@ function pushDart(value,label){
  }
 document.querySelectorAll('[data-mult]').forEach(b=>b.onclick=()=>{mult=Number(b.dataset.mult);document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x===b))});
 const keypad=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'25','BULL','0','EFFACER'];$('keypad').innerHTML=keypad.map(n=>`<button type="button" class="${['25','BULL','0','EFFACER'].includes(String(n))?'special':''}" data-key="${n}">${n==='0'?'0 · MANQUÉ':n}</button>`).join('');
-$('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){if(mult===3){toast('Le bull ne peut pas être triple.');return}pushDart(mult===2?50:25,mult===2?'DBull':'Bull25');return}if(k==='0'){pushDart(0,'0');return}let n=Number(k),v=n===25?25*mult:n*mult;pushDart(v,(mult===1?'S':mult===2?'D':'T')+n)};
+$('keypad').onclick=e=>{let b=e.target.closest('[data-key]');if(!b)return;let k=b.dataset.key;if(k==='EFFACER'){darts.pop();renderMatch();return}if(k==='BULL'){if(mult===3){toast('Le bull ne peut pas être triple.');return}pushDart(mult===2?50:25,mult===2?'DBull':'Bull25');return}if(k==='0'){pushDart(0,'0');return}let n=Number(k);if(n===25&&mult===3){toast('Le bull ne peut pas être triple.');return}let v=n===25?(mult===2?50:25):n*mult;pushDart(v,n===25?(mult===2?'DBull':'Bull25'):(mult===1?'S':mult===2?'D':'T')+n)};
 $('undoDart').onclick=()=>{darts.pop();renderMatch()};
-function next(){let m=db.current;if(!m)return;m.turn=(m.turn+1)%m.players.length;darts=[];if(m.game==='cricket')m.players[m.turn].turnDarts=0;renderMatch()}
+function next(){let m=db.current;m.turn=(m.turn+1)%m.players.length;darts=[];renderMatch()}
 function validate501(){
  let m=db.current;if(!m||m.game!=='501')return;
  if(!darts.length)return toast('Saisis au moins une fléchette.');
@@ -124,6 +125,7 @@ function validate501(){
  let p=active(),visit=[...darts],sum=visit.reduce((a,d)=>a+d.score,0),after=p.score-sum,last=visit[visit.length-1];
  p.visits++;
  const bust=after<0||after===1||(after===0&&!(/^(D|DBull)/.test(last.label)));
+ const fullVisit=visit.length===3||voiceVisit;
  if(bust){
   $('turnMessage').textContent='BUST ! Score inchangé.';
   say('Bust ! Le score ne change pas.',true);
@@ -131,38 +133,38 @@ function validate501(){
  }else{
   p.total+=sum;p.best=Math.max(p.best,sum);p.score=after;
   $('turnMessage').textContent=`${sum} points ! Il te reste ${after}.`;
-  // Phrases demandées : déclenchées uniquement après une volée complète de 3 fléchettes.
-  if(visit.length===3 && sum<=25){
-   p.case25=(p.case25||0)+1;
-   effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');
-   say('T’as une case pour ça !',true);
-  }else if(visit.length===3 && sum===26){
-   effect('26','26, LA DRÔME !','');
-   say('26, la Drôme !',true);
-  }else if(visit.length===3 && sum===180){
-   say('Cent quatre-vingts ! Il te reste '+after+'. Magnifique !',true);
-   effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();
-  }else{
+  const specialLow=fullVisit&&sum<=26;
+  if(!specialLow&&!(fullVisit&&sum===180)){
    say(`${sum} points, il te reste ${after}.`,sum>=60);
    if(sum>=100){toast('Très belle volée !');say('Magnifique volée ! Continue comme ça !',true)}
    else if(sum>=60){say('Bien joué ! Belle volée.',true)}
   }
-  // Conseil après trois volées consécutives sous 60 points (règle des 6 flèches).
-  if(sum<60){
-   p.lowRun=(p.lowRun||0)+1;
-   if(p.lowRun>=3){p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;say('Ah, on va passer à la règle des 6 flèches !',true);effect('six','RÈGLE DES 6 FLÈCHES !','On reprend les bases');}
-  }else p.lowRun=0;
-  if(after===0){finish(p);return}
+  if(sum>=60&&sum!==180){p.lowRun=0;}
+  if(after===0){voiceVisit=false;finish(p);return}
  }
- darts=[];mult=1;document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x.dataset.mult==='1'));next();save();
+ // Phrases personnelles : trois fléchettes physiques ou un score complet annoncé à la voix.
+ if(fullVisit){
+  if(sum<=25){
+   p.case25=(p.case25||0)+1;p.lowRun=(p.lowRun||0)+1;
+   effect('case25','T’AS UNE CASE POUR ÇA !',sum+' POINTS');
+   if(p.lowRun>=3){
+    p.sixDartAdvice=(p.sixDartAdvice||0)+1;p.lowRun=0;
+    say('T’as une case pour ça !',true);
+    setTimeout(()=>say('Ah, on va passer à la règle des 6 flèches !',true),1900);
+    effect('six','RÈGLE DES 6 FLÈCHES !','Trois volées de 25 points ou moins');
+   }else say('T’as une case pour ça !',true);
+  }else if(sum===26){p.lowRun=0;effect('26','26, LA DRÔME !','');say('26, la Drôme !',true);}
+  else {p.lowRun=0;if(!bust&&sum===180){say('Cent quatre-vingts ! Magnifique !',true);effect('180','180 !','VOLÉE MAXIMALE');toast('180 ! VOLÉE MAXIMALE !');celebrate();}}
+ }
+ voiceVisit=false;darts=[];mult=1;document.querySelectorAll('[data-mult]').forEach(x=>x.classList.toggle('selected',x.dataset.mult==='1'));next();save();
 }
 $('validateTurn').onclick=validate501;
-$('undoTurn').onclick=()=>{if(!turnSnapshots.length)return toast('Aucun tour à annuler.');db.current=JSON.parse(turnSnapshots.pop());darts=[];save();say('Dernier tour annulé.')};
-$('nextPlayer').onclick=()=>{if(!db.current)return;if(db.current.game==='cricket'&&active().turnDarts>0)turnSnapshots.pop();next();save();say('Au tour de '+active().name)};
+$('undoTurn').onclick=()=>{if(!turnSnapshots.length)return toast('Aucun tour à annuler.');db.current=JSON.parse(turnSnapshots.pop());darts=[];voiceVisit=false;save();say('Dernier tour annulé.')};
+$('nextPlayer').onclick=()=>{if(!db.current)return;next();say('Au tour de '+active().name)};
 function addCricket(){
  let m=db.current;if(!m||m.game!=='cricket')return;
- let p=active();if((p.turnDarts||0)===0)turnSnapshots.push(JSON.stringify(m));
- let t=$('cricketTarget').value,n=Number($('cricketMarks').value),old=p.marks[t]||0,total=old+n,newMarks=Math.min(3,total),extra=Math.max(0,total-3),value=t==='Bull'?25:Number(t);
+ turnSnapshots.push(JSON.stringify(m));
+ let p=active(),t=$('cricketTarget').value,n=Number($('cricketMarks').value),old=p.marks[t]||0,total=old+n,newMarks=Math.min(3,total),extra=Math.max(0,total-3),value=t==='Bull'?25:Number(t);
  if(extra&&m.players.some(q=>q.id!==p.id&&q.marks[t]<3))p.points+=extra*value;
  p.marks[t]=newMarks;p.turnDarts=(p.turnDarts||0)+1;m.log.push({player:p.name,target:t,marks:n});
  if(n===3){effect('triple','TRIPLE !',String(t));say('Excellent ! Trois marques sur '+t+'.',true)}else{say(`${p.name}, ${n} marque${n>1?'s':''} sur ${t}.`,true)}
@@ -172,17 +174,17 @@ function addCricket(){
 }
 $('addCricket').onclick=addCricket;
 function finish(p){
- let m=db.current;if(!m)return;
+ let m=db.current;if(!m)return;voiceVisit=false;turnSnapshots=[];
  m.players.forEach(q=>{let owner=db.players.find(x=>x.id===q.id);if(!owner)return;owner.stats.matches=(owner.stats.matches||0)+1;owner.stats.case25=(owner.stats.case25||0)+(q.case25||0);owner.stats.sixDartAdvice=(owner.stats.sixDartAdvice||0)+(q.sixDartAdvice||0);if(m.game==='501'){owner.stats.visits=(owner.stats.visits||0)+q.visits;owner.stats.pointsScored=(owner.stats.pointsScored||0)+q.total;owner.stats.bestVisit=Math.max(owner.stats.bestVisit||0,q.best);owner.stats.average=owner.stats.visits?owner.stats.pointsScored/owner.stats.visits:0;} });
  let owner=db.players.find(x=>x.id===p.id);if(owner){owner.stats.wins=(owner.stats.wins||0)+1;if(m.game==='cricket')owner.stats.cricketWins=(owner.stats.cricketWins||0)+1;}
  db.history.unshift({date:new Date().toLocaleString('fr-FR'),game:m.game,winner:p.name});db.current=null;save();$('winnerText').textContent=p.name+' remporte la partie !';$('winModal').classList.remove('hidden');celebrate();say('Fin de partie ! Victoire ! Bravo '+p.name+' !',true)
 }
 $('closeWin').onclick=()=>$('winModal').classList.add('hidden');
-function renderStats(){let p=db.players.find(x=>x.id===$('statsPlayer').value)||db.players[0];if(!p){$('statsContent').innerHTML='<p class="muted">Ajoute un joueur pour afficher ses statistiques.</p>';$('history').innerHTML='';return}$('statsPlayer').value=p.id;let vals=[['Matchs',p.stats.matches],['Victoires',p.stats.wins],['Moyenne / volée',Number(p.stats.average||0).toFixed(1)],['Meilleure volée',p.stats.bestVisit],['Points marqués',p.stats.pointsScored],['Victoires Cricket',p.stats.cricketWins],['T’as une case pour ça',p.stats.case25||0],['Règle des 6 flèches',p.stats.sixDartAdvice||0]];$('statsContent').innerHTML=vals.map(v=>`<div class="stat"><span class="muted">${v[0]}</span><strong>${v[1]}</strong></div>`).join('');$('history').innerHTML=db.history.slice(0,20).map(h=>`<div class="historyitem">${esc(h.date)} · ${h.game.toUpperCase()} · <b>${esc(h.winner)}</b></div>`).join('')||'<p class="muted">Aucune partie terminée.</p>'}
+function renderStats(){let p=db.players.find(x=>x.id===$('statsPlayer').value)||db.players[0];if(!p){$('statsContent').innerHTML='<p class="muted">Ajoute un joueur pour afficher ses statistiques.</p>';$('history').innerHTML='';return}$('statsPlayer').value=p.id;let vals=[['Matchs',p.stats.matches],['Victoires',p.stats.wins],['Moyenne / volée',Number(p.stats.average||0).toFixed(1)],['Meilleure volée',p.stats.bestVisit],['Points marqués',p.stats.pointsScored],['Victoires Cricket',p.stats.cricketWins],['Volées de 25 points ou moins',p.stats.case25||0],['Conseils règle des 6 flèches',p.stats.sixDartAdvice||0]];$('statsContent').innerHTML=vals.map(v=>`<div class="stat"><span class="muted">${v[0]}</span><strong>${v[1]}</strong></div>`).join('');$('history').innerHTML=db.history.slice(0,20).map(h=>`<div class="historyitem">${esc(h.date)} · ${h.game.toUpperCase()} · <b>${esc(h.winner)}</b></div>`).join('')||'<p class="muted">Aucune partie terminée.</p>'}
 $('statsPlayer').onchange=renderStats;
 $('export').onclick=()=>download(JSON.stringify(db,null,2),'darts-manager-sauvegarde.json','application/json');
 function download(data,name,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
-$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{try{const f=e.target.files&&e.target.files[0];if(!f)return;const parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.players)||!Array.isArray(parsed.history))throw new Error('format');db=normalizeDB(parsed);turnSnapshots=[];darts=[];save();toast('Sauvegarde importée.')}catch{toast('Fichier de sauvegarde invalide ou incomplet.')}finally{e.target.value=''}};
+$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const imported=JSON.parse(await f.text());if(!imported||!Array.isArray(imported.players)||!Array.isArray(imported.history))throw new Error('format');db=normalizeDB(imported);darts=[];turnSnapshots=[];save();toast('Sauvegarde importée.')}catch{toast('Fichier de sauvegarde invalide : données non modifiées.')}finally{e.target.value=''}};
 const plans=[
 [{m:10,t:'Échauffement',d:'Lance tranquillement sur le 20, puis sur le 19. Cherche un geste souple.'},{m:15,t:'Précision sur le 20',d:'5 séries de 3 volées sur le simple 20. Note les fléchettes dans le secteur.'},{m:15,t:'Groupement',d:'Vise le même secteur avec les trois fléchettes. Priorité au groupement.'},{m:15,t:'Tours 20 / 19 / 18',d:'Une volée sur chaque cible. Reste régulier.'},{m:10,t:'Doubles faciles',d:'Travaille D16, D20 et D10.'},{m:10,t:'Finir en 501',d:'Joue un 501 en te concentrant sur la régularité.'}],
 [{m:10,t:'Échauffement',d:'Mise en route progressive sur 20 et 19.'},{m:15,t:'Triple 20',d:'Vise T20 sans forcer. Garde le même rythme.'},{m:15,t:'Triples 19 et 18',d:'Alterne T19 et T18, trois fléchettes par cible.'},{m:15,t:'Scoring',d:'Enchaîne des volées de trois fléchettes et cherche à dépasser 60.'},{m:10,t:'Cibles de secours',d:'Travaille 19, 18 et 17 pour apprendre à changer de cible.'},{m:10,t:'Défi 501',d:'Joue un 501 en privilégiant les grosses zones simples.'}],
@@ -198,9 +200,46 @@ $('startCoach').onclick=()=>{if(coachRunning)return;coachRunning=true;if(!coachI
 $('pauseCoach').onclick=()=>{coachRunning=false;if(coachInterval){clearInterval(coachInterval);coachInterval=null}say('Séance en pause.')};
 $('resetCoach').onclick=()=>{coachRunning=false;if(coachInterval)clearInterval(coachInterval);coachInterval=null;remaining=4500;coachStep=0;updateTimer();renderPlan();say('Chronomètre remis à zéro.')};
 $('speakPlan').onclick=coachSpeak;$('stopSpeech').onclick=()=>speechSynthesis.cancel();
-$('voiceBtn').onclick=()=>{let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('voiceStatus').textContent='Reconnaissance vocale indisponible dans ce navigateur. Utilise la saisie tactile.';return}if(recognition){recognition.stop();recognition=null;$('voiceStatus').textContent='Micro désactivé.';return}recognition=new SR();recognition.lang='fr-FR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{let s=e.results[e.results.length-1][0].transcript.toLowerCase();$('voiceStatus').textContent='Entendu : '+s;if(s.includes('suivant')){$('nextPlayer').click()}else if(s.includes('annuler')){$('undoTurn').click()}else if(s.includes('répète')||s.includes('repete'))coachSpeak();else{let n=s.match(/\d+/);if(n&&db.current?.game==='501'){let v=Math.min(180,Number(n[0]));darts=[{score:v,label:'Voix '+v}];validate501()}}};recognition.onerror=e=>$('voiceStatus').textContent='Micro : '+e.error;recognition.onend=()=>{recognition=null};recognition.start();$('voiceStatus').textContent='Micro actif. Dis « score 60 », « joueur suivant », « annuler le tour ».'};
+let voiceEnabled=false;
+function startVoiceRecognition(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){$('voiceStatus').textContent='Reconnaissance vocale indisponible dans ce navigateur. Utilise la saisie tactile.';voiceEnabled=false;return;}
+ if(!voiceEnabled)return;
+ try{
+  recognition=new SR();recognition.lang='fr-FR';recognition.continuous=true;recognition.interimResults=false;
+  recognition.onresult=e=>{
+   const heard=e.results[e.results.length-1][0].transcript.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+   $('voiceStatus').textContent='Entendu : '+heard;
+   if(heard.includes('joueur suivant')||heard.includes('suivant')){$('nextPlayer').click();return;}
+   if(heard.includes('annuler')||heard.includes('retour')){$('undoTurn').click();return;}
+   if(heard.includes('repete')||heard.includes('coach repete')){coachSpeak();return;}
+   if(db.current?.game==='cricket'){
+    const targetMatch=heard.match(/\b(20|19|18|17|16|15)\b/);
+    const target=heard.includes('bull')?'Bull':targetMatch?.[1];
+    if(target){$('cricketTarget').value=target;let marks=heard.includes('triple')?3:heard.includes('double')?2:1;$('cricketMarks').value=String(marks);$('addCricket').click();return;}
+   }
+   if(db.current?.game==='501'){
+    const n=heard.match(/\b(\d{1,3})\b/);if(!n)return;
+    let score=Number(n[1]),label='Voix '+score;
+    const doubleBull=heard.includes('double bull')||heard.includes('bull double');
+    const triple=heard.includes('triple'),double=heard.includes('double');
+    const target=heard.match(/\b(20|19|18|17|16|15|14|13|12|11|10|9|8|7|6|5|4|3|2|1)\b/g);
+    if(doubleBull){score=50;label='DBull';}
+    else if(triple&&target?.length){score=Number(target[target.length-1])*3;label='T'+target[target.length-1];}
+    else if(double&&target?.length){score=Number(target[target.length-1])*2;label='D'+target[target.length-1];}
+    else if(heard.includes('bull')){score=25;label='Bull25';}
+    if(score>180){$('voiceStatus').textContent='Score vocal supérieur à 180 : non enregistré.';return;}
+    darts=[{score,label}];voiceVisit=true;renderMatch();validate501();
+   }
+  };
+  recognition.onerror=e=>{$('voiceStatus').textContent='Micro : '+e.error;if(['not-allowed','service-not-allowed'].includes(e.error))voiceEnabled=false;};
+  recognition.onend=()=>{recognition=null;if(voiceEnabled){$('voiceStatus').textContent='Micro actif — écoute en cours…';setTimeout(startVoiceRecognition,450);}};
+  recognition.start();$('voiceStatus').textContent='Micro actif. Dis « score 60 », « double 20 », « triple 19 », « joueur suivant », « annuler le tour » ou « 20 triple » pour le Cricket.';
+ }catch(e){recognition=null;$('voiceStatus').textContent='Impossible de démarrer le micro : '+e.message;voiceEnabled=false;}
+}
+$('voiceBtn').onclick=()=>{if(voiceEnabled){voiceEnabled=false;if(recognition){recognition.onend=null;recognition.stop();recognition=null;}$('voiceStatus').textContent='Micro désactivé.';return;}voiceEnabled=true;startVoiceRecognition();};
 $('voiceMode').onchange=()=>{db.settings.voiceMode=$('voiceMode').value;save()};$('voiceRate').oninput=()=>{db.settings.voiceRate=Number($('voiceRate').value);save()};$('testVoice').onclick=()=>say('Darts Manager est prêt. Bonne partie et vise juste !',true);
 $('clearData').onclick=()=>{if(confirm('Effacer tous les joueurs, scores et historiques ?')){db=fresh();save();toast('Données effacées.')}};
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});reg.update().catch(()=>{})}catch(e){console.warn('Service worker indisponible',e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('Service worker:',err)));
 $('voiceMode').value=db.settings.voiceMode||'all';$('voiceRate').value=db.settings.voiceRate||1;renderAll();renderPlan();updateTimer();
 </script></body></html>

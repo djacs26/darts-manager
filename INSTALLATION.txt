@@ -1,9 +1,8 @@
-MISE A JOUR DARTS MANAGER 4.4.1
-1. Décompresser ce ZIP.
+DARTS MANAGER 4.5.0 — MISE À JOUR
+1. Décompresser l'archive.
 2. Dans GitHub, ouvrir le dépôt djacs26/darts-manager puis Add file > Upload files.
-3. Envoyer les 8 fichiers de ce dossier à la racine du dépôt (pas le dossier parent).
-4. Vérifier que index.html, sw.js, manifest.webmanifest et les icônes sont à la racine.
-5. Cliquer Commit changes.
-6. Attendre la publication GitHub Pages, puis ouvrir https://djacs26.github.io/darts-manager/?v=441
-7. Sur Android, fermer l'ancienne application installée, ouvrir le lien dans Chrome et actualiser.
-IMPORTANT : exporter les données depuis l'onglet Statistiques avant la mise à jour. Les données locales ne sont pas synchronisées entre appareils.
+3. Envoyer les 8 fichiers à la racine du dépôt en remplaçant les anciens.
+4. Choisir « Commit directly to the main branch », puis Commit changes.
+5. Attendre la publication GitHub Pages puis ouvrir https://djacs26.github.io/darts-manager/?v=450.
+6. Sur Android, fermer l'application installée, ouvrir le lien dans Chrome et actualiser. Si l'ancienne version reste affichée, supprimer les données du site pour ce domaine puis recharger.
+Les profils et statistiques sont stockés localement dans le navigateur. Exporter une sauvegarde avant toute mise à jour majeure.

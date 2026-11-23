@@ -1,7 +1,7 @@
 {
-  "name": "DARTS MANAGER",
+  "name": "Darts Manager 4.5.0",
   "short_name": "Darts Manager",
-  "start_url": "./",
+  "start_url": "./?v=450",
   "scope": "./",
   "display": "standalone",
   "background_color": "#07100b",
